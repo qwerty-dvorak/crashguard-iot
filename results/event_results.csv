@@ -1,4 +1,4 @@
-event_id,label,scenario,baseline_prediction,legacy_prediction,proposed_prediction,baseline_detection_ms,legacy_detection_ms,proposed_detection_ms,baseline_confirmation_delay_ms,legacy_confirmation_delay_ms,proposed_confirmation_delay_ms
+event_id,label,scenario,baseline_prediction,ordered_prediction,crashguard_prediction,baseline_detection_ms,ordered_detection_ms,crashguard_detection_ms,baseline_confirmation_delay_ms,ordered_confirmation_delay_ms,crashguard_confirmation_delay_ms
 SIM-0000,0,normal_riding,0,0,0,-1,-1,-1,-1,-1,-1
 SIM-0001,0,normal_riding,0,0,0,-1,-1,-1,-1,-1,-1
 SIM-0002,0,normal_riding,0,0,0,-1,-1,-1,-1,-1,-1

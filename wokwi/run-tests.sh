@@ -42,6 +42,6 @@ run_scenario() {
 
 run_scenario scenario-crash.yaml 25000
 run_scenario scenario-pothole.yaml 10000
-run_scenario scenario-cancel.yaml 30000 ALERT_SENT
+run_scenario scenario-cancel.yaml 30000 ALERT_DUE
 
 printf '\n%s\n' 'All CrashGuard Wokwi scenarios passed.'

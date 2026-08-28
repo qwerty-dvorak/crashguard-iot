@@ -22,7 +22,7 @@
 \input{results/generated_macros.tex}
 
 \newcommand{\degree}{\ensuremath{^{\circ}}}
-\linespread{1.04}
+\linespread{1.00}
 \renewcommand{\arraystretch}{1.15}
 \setlist{nosep,leftmargin=*}
 \captionsetup{font=small,labelfont=bf}
@@ -49,12 +49,13 @@ handlebar-mounted MPU-6050, LED, piezo alarm, cancel button, and optional Blynk
 notification. Physical hardware was unavailable for this review, so the
 evidence is limited to deterministic data replay, an independent
 powered-two-wheeler dataset audit, native tests, target compilation, and three
-Wokwi virtual-hardware scenarios. The proposed state machine correlates
+Wokwi virtual-hardware scenarios. The CrashGuard state machine correlates
 acceleration, rotation, orientation change, and post-event rest instead of
 using a single impact threshold. On 675 generated ten-second events it
-produced \VTwoTP{} true positives, \VTwoTN{} true negatives,
-\VTwoFP{} false positives, and \VTwoFN{} false negatives, corresponding to
-\VTwoSensitivity{} sensitivity and \VTwoSpecificity{} specificity. These are
+produced \CrashGuardTP{} true positives, \CrashGuardTN{} true negatives,
+\CrashGuardFP{} false positives, and \CrashGuardFN{} false negatives,
+corresponding to \CrashGuardSensitivity{} sensitivity and
+\CrashGuardSpecificity{} specificity. These are
 simulation results and must not be interpreted as road-crash accuracy. The
 study also shows that the original 4 g and 200 $\degree$/s rule is too strict
 for the closest public motorcycle data. The outcome is a testable prototype
@@ -82,7 +83,7 @@ The project investigates three questions:
 \begin{enumerate}[label=\textbf{RQ\arabic*:}]
   \item Can impact, rotation, and tilted rest reject high-dynamic non-crash
         riding events better than acceleration alone?
-  \item Are the original Review-1 thresholds consistent with independent
+  \item Is a strict 4 g and 200 $\degree$/s ordered rule consistent with independent
         powered-two-wheeler recordings?
   \item Can one compact decision method run in native replay and on an ESP32
         while producing the expected virtual-hardware behavior?
@@ -96,13 +97,11 @@ position.
 
 \section{Evidence from the base paper and related work}
 
-The supplied pIOT base paper uses a shin-mounted wearable, 50 Hz IMU windows,
-and a CNN-transformer for human activity and fall recognition
-~\cite{tian2026transformer}. Its useful lessons are that six-axis temporal
-context matters, accuracy alone is insufficient for an imbalanced problem,
-and implementation limits should influence model selection. Its reported
-human-fall score cannot be transferred to a motorcycle handlebar because the
-moving body, orientation, vibration, label, and sampling pipeline differ.
+The supplied pIOT base paper uses a shin-mounted LSM6DSM, 50 Hz windows, and a
+CNN-transformer for human fall recognition~\cite{tian2026transformer}.
+CrashGuard adopts its useful principles---six-axis temporal context, separate
+sensitivity and specificity, and hardware-aware design---but not its model or
+score. Table~\ref{tab:basecompare} makes the difference explicit.
 
 The paper was treated as evidence to audit, not final truth. Its stated ROC
 point $(\mathrm{FPR},\mathrm{TPR})=(0.055,0.905)$ implies an AUC of at least
@@ -112,6 +111,33 @@ both 8-bit and Q7.8, and the downloaded archive does not contain a complete
 manifest for reproducing the paper's final windows, labels, augmentation, and
 subject splits. Therefore, neither its numerical result nor model is reused
 as CrashGuard performance evidence.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\caption{Comparison with the supplied base paper. Results are not a head-to-head benchmark.}
+\label{tab:basecompare}
+\begin{tabularx}{\textwidth}{@{}p{0.20\textwidth}XX@{}}
+\toprule
+Item & Base paper & CrashGuard \\
+\midrule
+Target and sensor & Human falls; shin LSM6DSM, 50 Hz & Motorcycle fall-like
+events; handlebar MPU-6050, 100 Hz \\
+Decision method & Balanced CNN-transformer with focal loss & Fixed,
+interpretable temporal state machine \\
+Reported evidence & Test sensitivity 90.5\%, specificity 94.5\%, accuracy
+93.1\% on its subject-separated human data & Simulated sensitivity
+\CrashGuardSensitivity{} and specificity \CrashGuardSpecificity{} on 675
+generated events \\
+Deployment & Reported iCE40UP5K FPGA implementation & ESP32 target compile,
+native replay, and Wokwi virtual hardware \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The base-paper percentages must not be compared numerically with CrashGuard's:
+the sensing body, label definition, dataset, split, and evaluation unit all
+differ, and CrashGuard has no physical target-domain test set.
 
 Motorcycle-specific research provides the stronger design basis. Boubezoul
 et al. published a rule-based powered-two-wheeler detector and released four
@@ -128,8 +154,11 @@ comparable because placements, vehicles, labels, and test protocols differ.
 
 The MPU-6050 is sampled at 100 Hz. Detection remains local on the ESP32. A
 confirmed event activates the LED and piezo, then starts a 15 s cancellation
-window. If the rider does not cancel, the firmware attempts a Blynk event over
-a phone hotspot~\cite{blynkevents}. The hotspot supplies connectivity only;
+window. If the rider does not cancel, the firmware makes a bounded SSL
+connection through a phone hotspot and calls Blynk IoT's
+\texttt{Blynk.logEvent} with event code \texttt{crash\_confirmed}
+~\cite{blynkevents}. The event must be created in the Blynk template with
+timeline and notification delivery enabled. The hotspot supplies connectivity only;
 it does not give the ESP32 the phone's location. No coordinates are therefore
 invented.
 
@@ -265,7 +294,7 @@ These rules are summarized in Table~\ref{tab:parameters}.
 \begin{table}[H]
 \centering
 \small
-\caption{CrashGuard v2 decision parameters.}
+\caption{CrashGuard decision parameters.}
 \label{tab:parameters}
 \begin{tabular}{@{}lll@{}}
 \toprule
@@ -282,9 +311,10 @@ Cancel interval & 15000 ms & Gives the rider time to stop alerting \\
 \end{tabular}
 \end{table}
 
-The comparison uses: (1) acceleration at or above 2 g alone, (2) the Review-1
+The comparison uses: (1) acceleration at or above 2 g alone, (2) a strict
 ordered rule requiring 4 g, then 200 $\degree$/s, then three seconds of rest,
-and (3) CrashGuard v2. No method is trained or fitted on the event labels.
+and (3) CrashGuard. The first two are comparison methods, not older releases
+of CrashGuard. No method is trained or fitted on the event labels.
 
 \section{Implementation and Wokwi validation}
 
@@ -295,21 +325,26 @@ C++ decision logic is used for native dataset replay, avoiding disagreement
 between the reported algorithm and deployed code. Native tests cover rotation
 before impact, pothole rejection, parked tip rejection, and cancellation.
 
-Compilation with ESP32 Arduino core 3.3.11 succeeds using 392,947 bytes of
-flash (29\%) and 29,808 bytes of statically allocated RAM (9\%). These values
-show build feasibility only; stack peaks, timing jitter, energy use, and
-long-duration stability still require physical measurement.
+Compilation with ESP32 Arduino core 3.3.11 and Blynk library 1.3.5 succeeds,
+using 1,040,343 bytes of flash (79\%) and 49,124 bytes of static RAM (14\%).
+The firmware starts Wi-Fi without blocking detection and connects to Blynk
+only when the cancellation deadline expires. A submitted event is distinguished
+from an unavailable network and from verified phone receipt. Build size shows
+feasibility only; timing jitter, energy use, and long-duration stability still
+require physical measurement.
 
-The Wokwi circuit contains an ESP32-DevKitC V4 virtual board, MPU-6050, LED,
+The Wokwi circuit contains an ESP32-DevKitC virtual board, MPU-6050, LED,
 piezo, button, and battery-sense potentiometer. It uses the same GPIO numbers
-as the intended ESP32 DevKit V1 hardware. UART is connected explicitly so the
+as the physical design. UART is connected explicitly so the
 test runner can observe firmware events. Wokwi sensor controls apply values in
 g and degree/s~\cite{wokwidiagram,wokwimpu,wokwiscenarios}.
 
-All three authenticated scenarios passed with Wokwi CLI 0.26.1 and Simulation
-API 1.0.0-20260825-g9f67b160. The firmware contained no hotspot or Blynk
-credentials, so the alert result verifies the alert-due path, not Internet
-delivery.
+The virtual crash, pothole, and cancellation scenarios were executed once and
+passed with Wokwi CLI 0.26.1. The checked-in offline build contains no Blynk
+credentials and explicitly reports that the event was skipped. A separate
+opt-in scenario expects \texttt{BLYNK\_EVENT\_SUBMITTED} when a dedicated Blynk
+test device is configured over Wokwi's \texttt{Wokwi-GUEST} network; it is not
+reported as a completed phone-delivery test.
 
 \begin{table}[H]
 \centering
@@ -333,8 +368,9 @@ guard; no later alert-due event \\
 Table~\ref{tab:metrics} and Figure~\ref{fig:performance} report event-level
 results on 150 positive and 525 negative generated events. The
 acceleration-only baseline is sensitive but produces 289 false positives. The
-Review-1 rule avoids false positives but misses 111 of 150 simulated crashes.
-V2 recovers 75 of those misses without adding a false positive in this set.
+strict ordered rule avoids false positives but misses 111 of 150 simulated
+crashes. CrashGuard recovers 75 of those misses without adding a false positive
+in this set.
 
 \begin{table}[H]
 \centering
@@ -346,8 +382,8 @@ V2 recovers 75 of those misses without adding a false positive in this set.
 Method & TP & TN & FP & FN & Sens. & Spec. & F1 \\
 \midrule
 Acceleration only & 134 & 236 & 289 & 16 & \BaselineSensitivity{} & \BaselineSpecificity{} & \BaselineFOne{} \\
-Review-1 ordered & 39 & 525 & 0 & 111 & \LegacySensitivity{} & \LegacySpecificity{} & \LegacyFOne{} \\
-CrashGuard v2 & \VTwoTP{} & \VTwoTN{} & \VTwoFP{} & \VTwoFN{} & \VTwoSensitivity{} & \VTwoSpecificity{} & \VTwoFOne{} \\
+Strict ordered rule & 39 & 525 & 0 & 111 & \OrderedSensitivity{} & \OrderedSpecificity{} & \OrderedFOne{} \\
+CrashGuard & \CrashGuardTP{} & \CrashGuardTN{} & \CrashGuardFP{} & \CrashGuardFN{} & \CrashGuardSensitivity{} & \CrashGuardSpecificity{} & \CrashGuardFOne{} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -360,11 +396,11 @@ describe finite simulated event counts, not road uncertainty.}
 \label{fig:performance}
 \end{figure}
 
-The v2 sensitivity interval is [\VTwoSensitivityLow{},
-\VTwoSensitivityHigh{}]. Its observed specificity is 100\%, but the lower
-Wilson bound is \VTwoSpecificityLow{}; zero false positives in 525 generated
+The CrashGuard sensitivity interval is [\CrashGuardSensitivityLow{},
+\CrashGuardSensitivityHigh{}]. Its observed specificity is 100\%, but the lower
+Wilson bound is \CrashGuardSpecificityLow{}; zero false positives in 525 generated
 events does not prove that false alarms are impossible. Median confirmation
-delay is \VTwoConfirmationDelayMs{} ms, which reflects the required two-
+delay is \CrashGuardConfirmationDelayMs{} ms, which reflects the required two-
 second stable-rest interval. All 75 high-side events were detected, while 36
 of 75 lower-dynamic low-side events were missed. This is the main simulated
 failure mode.
@@ -379,12 +415,12 @@ threshold crossing alone does not determine the output.}
 
 The independent PTW audit supports lowering the original thresholds. None of
 the four published fall intervals reached 4 g or 200 $\degree$/s, whereas all
-four passed the v2 high-or-low acceleration gate and all four passed its
+four passed the CrashGuard high-or-low acceleration gate and all four passed its
 90 $\degree$/s rotation gate. Several non-fall manoeuvres also cross an
-individual v2 gate, confirming why temporal correlation and final-rest
+individual CrashGuard gate, confirming why temporal correlation and final-rest
 evidence are necessary. The external archive does not provide a reliable
 gravity reference for reproducing the full state machine, so it is not
-reported as a complete v2 accuracy test.
+reported as a complete CrashGuard accuracy test.
 
 \begin{figure}[H]
 \centering
@@ -422,18 +458,12 @@ and operational results should include false alerts per hour and kilometre.
 
 \section{Conclusion}
 
-CrashGuard demonstrates that a compact ESP32 state machine can combine
-impact, rotation, tilt, rest, and rider cancellation without requiring a
-large learned model. In deterministic simulation, v2 substantially improves
-on the original ordered rule and avoids the acceleration-only baseline's
-large false-positive count. The closest public motorcycle recordings also
-show that the original 4 g and 200 $\degree$/s thresholds are not portable.
-The firmware builds successfully and all three Wokwi scenarios pass.
-
-The main unresolved issue is evidence quality: v2 still misses 36 simulated
-low-side events and has not been evaluated on physical target-domain data.
-The correct next step is controlled bench and ordinary-riding data
-collection, not stronger performance claims.
+CrashGuard combines impact, rotation, tilt, rest, and rider cancellation in a
+compact ESP32 state machine. In deterministic simulation it improves on the
+strict ordered comparison and avoids the acceleration-only method's high
+false-positive count. Public motorcycle recordings also show that the 4 g and
+200 $\degree$/s thresholds are not portable. However, 36 simulated low-side
+events remain missed, so physical validation must precede stronger claims.
 
 \clearpage
 {\small

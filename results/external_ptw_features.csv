@@ -1,4 +1,4 @@
-recording,label,samples_100hz,peak_acceleration_g,minimum_acceleration_g,peak_angular_rate_dps,passes_review1_acceleration_4g,passes_v2_acceleration,passes_review1_rotation_200dps,passes_v2_rotation
+recording,label,samples_100hz,peak_acceleration_g,minimum_acceleration_g,peak_angular_rate_dps,passes_strict_acceleration_4g,passes_crashguard_acceleration,passes_strict_rotation_200dps,passes_crashguard_rotation
 Fall on a slippery straight road section,1,300,1.1687683401687385,0.013320606880084103,179.3534436361872,0,1,0,1
 Fall with leaning of the motorcycle,1,300,1.8780329774948024,0.04090969156086132,144.06995348963864,0,1,0,1
 Fall in the roundabout,1,300,1.689564657131486,0.011261449746065952,150.48782486513088,0,1,0,1

@@ -92,9 +92,9 @@ def replay_detector(review_dir: Path) -> list[dict[str, str]]:
 def metric_summary(rows: list[dict[str, str]]) -> dict[str, dict[str, float | int]]:
     output: dict[str, dict[str, float | int]] = {}
     for model, column in (
-        ("Acceleration-only baseline", "baseline_prediction"),
-        ("Review-1 ordered logic", "legacy_prediction"),
-        ("CrashGuard v2", "proposed_prediction"),
+        ("Acceleration-only comparison", "baseline_prediction"),
+        ("Strict ordered-threshold comparison", "ordered_prediction"),
+        ("CrashGuard", "crashguard_prediction"),
     ):
         labels = np.array([int(row["label"]) for row in rows], dtype=int)
         predictions = np.array([int(row[column]) for row in rows], dtype=int)
@@ -191,19 +191,19 @@ def external_ptw_features(
                 "peak_acceleration_g": float(np.max(acceleration_g[selection])),
                 "minimum_acceleration_g": float(np.min(acceleration_g[selection])),
                 "peak_angular_rate_dps": float(np.max(angular_dps[selection])),
-                "passes_review1_acceleration_4g": int(
+                "passes_strict_acceleration_4g": int(
                     np.any(acceleration_g[selection] >= 4.0)
                 ),
-                "passes_v2_acceleration": int(
+                "passes_crashguard_acceleration": int(
                     np.any(
                         (acceleration_g[selection] >= config["highImpactG"])
                         | (acceleration_g[selection] <= config["lowImpactG"])
                     )
                 ),
-                "passes_review1_rotation_200dps": int(
+                "passes_strict_rotation_200dps": int(
                     np.any(angular_dps[selection] >= 200.0)
                 ),
-                "passes_v2_rotation": int(
+                "passes_crashguard_rotation": int(
                     np.any(angular_dps[selection] >= config["rotationDps"])
                 ),
             }
@@ -331,8 +331,8 @@ def plot_external(
     x = np.arange(len(names))
     fig, axes = plt.subplots(2, 1, figsize=(8.0, 5.2), sharex=True, constrained_layout=True)
     axes[0].bar(x, acceleration, color=colors)
-    axes[0].axhline(config["highImpactG"], color="black", linestyle="--", linewidth=0.8, label="v2 threshold")
-    axes[0].axhline(4.0, color="black", linestyle=":", linewidth=0.8, label="Review-1 threshold")
+    axes[0].axhline(config["highImpactG"], color="black", linestyle="--", linewidth=0.8, label="CrashGuard threshold")
+    axes[0].axhline(4.0, color="black", linestyle=":", linewidth=0.8, label="Strict comparison")
     axes[0].set_ylabel("Peak acceleration (g)")
     axes[0].legend(fontsize=8)
     axes[1].bar(x, angular, color=colors)
@@ -360,9 +360,9 @@ def write_macros(
     external: list[dict[str, object]],
     config: dict[str, float],
 ) -> None:
-    v2 = metrics["CrashGuard v2"]
-    baseline = metrics["Acceleration-only baseline"]
-    legacy = metrics["Review-1 ordered logic"]
+    crashguard = metrics["CrashGuard"]
+    baseline = metrics["Acceleration-only comparison"]
+    ordered = metrics["Strict ordered-threshold comparison"]
     positive_external = [record for record in external if int(record["label"]) == 1]
     generated = review_dir / "results" / "generated_macros.tex"
     lines = [
@@ -372,38 +372,38 @@ def write_macros(
         rf"\newcommand{{\SimulationSamples}}{{{len(SCENARIOS) * TRIALS_PER_SCENARIO * int(DURATION_S * SAMPLE_HZ):,}}}",
         rf"\newcommand{{\PositiveEvents}}{{{2 * TRIALS_PER_SCENARIO}}}",
         rf"\newcommand{{\NegativeEvents}}{{{7 * TRIALS_PER_SCENARIO}}}",
-        rf"\newcommand{{\VTwoSensitivity}}{{{100 * float(v2['sensitivity']):.1f}\%}}",
-        rf"\newcommand{{\VTwoSpecificity}}{{{100 * float(v2['specificity']):.1f}\%}}",
-        rf"\newcommand{{\VTwoFOne}}{{{float(v2['f1']):.3f}}}",
-        rf"\newcommand{{\VTwoTP}}{{{int(v2['tp'])}}}",
-        rf"\newcommand{{\VTwoTN}}{{{int(v2['tn'])}}}",
-        rf"\newcommand{{\VTwoFP}}{{{int(v2['fp'])}}}",
-        rf"\newcommand{{\VTwoFN}}{{{int(v2['fn'])}}}",
-        rf"\newcommand{{\VTwoSensitivityLow}}{{{100 * float(v2['sensitivity_ci_low']):.1f}\%}}",
-        rf"\newcommand{{\VTwoSensitivityHigh}}{{{100 * float(v2['sensitivity_ci_high']):.1f}\%}}",
-        rf"\newcommand{{\VTwoSpecificityLow}}{{{100 * float(v2['specificity_ci_low']):.1f}\%}}",
-        rf"\newcommand{{\VTwoConfirmationDelayMs}}{{{float(v2['median_confirmation_delay_ms']):.0f}}}",
-        rf"\newcommand{{\VTwoImpactThreshold}}{{{config['highImpactG']:.2f}}}",
-        rf"\newcommand{{\VTwoLowImpactThreshold}}{{{config['lowImpactG']:.2f}}}",
-        rf"\newcommand{{\VTwoRotationThreshold}}{{{config['rotationDps']:.0f}}}",
-        rf"\newcommand{{\VTwoTiltThreshold}}{{{config['tiltDeg']:.0f}}}",
-        rf"\newcommand{{\VTwoRestHoldMs}}{{{config['restHoldMs']:.0f}}}",
-        rf"\newcommand{{\VTwoCorrelationMs}}{{{config['correlationMs']:.0f}}}",
-        rf"\newcommand{{\VTwoRideQualificationMs}}{{{config['rideQualificationMs']:.0f}}}",
-        rf"\newcommand{{\VTwoRideMemoryMs}}{{{config['rideMemoryMs']:.0f}}}",
+        rf"\newcommand{{\CrashGuardSensitivity}}{{{100 * float(crashguard['sensitivity']):.1f}\%}}",
+        rf"\newcommand{{\CrashGuardSpecificity}}{{{100 * float(crashguard['specificity']):.1f}\%}}",
+        rf"\newcommand{{\CrashGuardFOne}}{{{float(crashguard['f1']):.3f}}}",
+        rf"\newcommand{{\CrashGuardTP}}{{{int(crashguard['tp'])}}}",
+        rf"\newcommand{{\CrashGuardTN}}{{{int(crashguard['tn'])}}}",
+        rf"\newcommand{{\CrashGuardFP}}{{{int(crashguard['fp'])}}}",
+        rf"\newcommand{{\CrashGuardFN}}{{{int(crashguard['fn'])}}}",
+        rf"\newcommand{{\CrashGuardSensitivityLow}}{{{100 * float(crashguard['sensitivity_ci_low']):.1f}\%}}",
+        rf"\newcommand{{\CrashGuardSensitivityHigh}}{{{100 * float(crashguard['sensitivity_ci_high']):.1f}\%}}",
+        rf"\newcommand{{\CrashGuardSpecificityLow}}{{{100 * float(crashguard['specificity_ci_low']):.1f}\%}}",
+        rf"\newcommand{{\CrashGuardConfirmationDelayMs}}{{{float(crashguard['median_confirmation_delay_ms']):.0f}}}",
+        rf"\newcommand{{\CrashGuardImpactThreshold}}{{{config['highImpactG']:.2f}}}",
+        rf"\newcommand{{\CrashGuardLowImpactThreshold}}{{{config['lowImpactG']:.2f}}}",
+        rf"\newcommand{{\CrashGuardRotationThreshold}}{{{config['rotationDps']:.0f}}}",
+        rf"\newcommand{{\CrashGuardTiltThreshold}}{{{config['tiltDeg']:.0f}}}",
+        rf"\newcommand{{\CrashGuardRestHoldMs}}{{{config['restHoldMs']:.0f}}}",
+        rf"\newcommand{{\CrashGuardCorrelationMs}}{{{config['correlationMs']:.0f}}}",
+        rf"\newcommand{{\CrashGuardRideQualificationMs}}{{{config['rideQualificationMs']:.0f}}}",
+        rf"\newcommand{{\CrashGuardRideMemoryMs}}{{{config['rideMemoryMs']:.0f}}}",
         rf"\newcommand{{\BaselineSensitivity}}{{{100 * float(baseline['sensitivity']):.1f}\%}}",
         rf"\newcommand{{\BaselineSpecificity}}{{{100 * float(baseline['specificity']):.1f}\%}}",
         rf"\newcommand{{\BaselineFOne}}{{{float(baseline['f1']):.3f}}}",
-        rf"\newcommand{{\LegacySensitivity}}{{{100 * float(legacy['sensitivity']):.1f}\%}}",
-        rf"\newcommand{{\LegacySpecificity}}{{{100 * float(legacy['specificity']):.1f}\%}}",
-        rf"\newcommand{{\LegacyFOne}}{{{float(legacy['f1']):.3f}}}",
-        rf"\newcommand{{\LegacyConfirmationDelayMs}}{{{float(legacy['median_confirmation_delay_ms']):.0f}}}",
+        rf"\newcommand{{\OrderedSensitivity}}{{{100 * float(ordered['sensitivity']):.1f}\%}}",
+        rf"\newcommand{{\OrderedSpecificity}}{{{100 * float(ordered['specificity']):.1f}\%}}",
+        rf"\newcommand{{\OrderedFOne}}{{{float(ordered['f1']):.3f}}}",
+        rf"\newcommand{{\OrderedConfirmationDelayMs}}{{{float(ordered['median_confirmation_delay_ms']):.0f}}}",
         rf"\newcommand{{\ExternalFallCount}}{{{len(positive_external)}}}",
         rf"\newcommand{{\ExternalManoeuvreCount}}{{{len(external) - len(positive_external)}}}",
-        rf"\newcommand{{\ExternalFourGPass}}{{{sum(int(record['passes_review1_acceleration_4g']) for record in positive_external)}}}",
-        rf"\newcommand{{\ExternalTwoHundredPass}}{{{sum(int(record['passes_review1_rotation_200dps']) for record in positive_external)}}}",
-        rf"\newcommand{{\ExternalVTwoImpactPass}}{{{sum(int(record['passes_v2_acceleration']) for record in positive_external)}}}",
-        rf"\newcommand{{\ExternalVTwoRotationPass}}{{{sum(int(record['passes_v2_rotation']) for record in positive_external)}}}",
+        rf"\newcommand{{\ExternalFourGPass}}{{{sum(int(record['passes_strict_acceleration_4g']) for record in positive_external)}}}",
+        rf"\newcommand{{\ExternalTwoHundredPass}}{{{sum(int(record['passes_strict_rotation_200dps']) for record in positive_external)}}}",
+        rf"\newcommand{{\ExternalCrashGuardImpactPass}}{{{sum(int(record['passes_crashguard_acceleration']) for record in positive_external)}}}",
+        rf"\newcommand{{\ExternalCrashGuardRotationPass}}{{{sum(int(record['passes_crashguard_rotation']) for record in positive_external)}}}",
     ]
     generated.write_text("\n".join(lines) + "\n", encoding="utf-8")
 

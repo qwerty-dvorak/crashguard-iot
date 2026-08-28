@@ -1,4 +1,4 @@
-name: Crash profile reaches local alarm and Blynk handoff
+name: Crash profile queues the configured Blynk event
 version: 1
 author: CrashGuard research prototype
 steps:
@@ -48,4 +48,4 @@ steps:
       value: 0
   - wait-serial: 'CRASH_CONFIRMED'
   - wait-serial: 'ALERT_DUE'
-  - wait-serial: 'BLYNK_EVENT_SKIPPED reason=not_configured'
+  - wait-serial: 'BLYNK_EVENT_SUBMITTED code=crash_confirmed'

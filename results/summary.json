@@ -35,7 +35,7 @@
     "cancelWindowMs": 15000.0
   },
   "metrics": {
-    "Acceleration-only baseline": {
+    "Acceleration-only comparison": {
       "tp": 134,
       "tn": 236,
       "fp": 289,
@@ -50,7 +50,7 @@
       "specificity_ci_high": 0.4922886431570466,
       "median_confirmation_delay_ms": 0.0
     },
-    "Review-1 ordered logic": {
+    "Strict ordered-threshold comparison": {
       "tp": 39,
       "tn": 525,
       "fp": 0,
@@ -65,7 +65,7 @@
       "specificity_ci_high": 1.0000000000000002,
       "median_confirmation_delay_ms": 3120.0
     },
-    "CrashGuard v2": {
+    "CrashGuard": {
       "tp": 114,
       "tn": 525,
       "fp": 0,
@@ -89,10 +89,10 @@
       "peak_acceleration_g": 1.1687683401687385,
       "minimum_acceleration_g": 0.013320606880084103,
       "peak_angular_rate_dps": 179.3534436361872,
-      "passes_review1_acceleration_4g": 0,
-      "passes_v2_acceleration": 1,
-      "passes_review1_rotation_200dps": 0,
-      "passes_v2_rotation": 1
+      "passes_strict_acceleration_4g": 0,
+      "passes_crashguard_acceleration": 1,
+      "passes_strict_rotation_200dps": 0,
+      "passes_crashguard_rotation": 1
     },
     {
       "recording": "Fall with leaning of the motorcycle",
@@ -101,10 +101,10 @@
       "peak_acceleration_g": 1.8780329774948024,
       "minimum_acceleration_g": 0.04090969156086132,
       "peak_angular_rate_dps": 144.06995348963864,
-      "passes_review1_acceleration_4g": 0,
-      "passes_v2_acceleration": 1,
-      "passes_review1_rotation_200dps": 0,
-      "passes_v2_rotation": 1
+      "passes_strict_acceleration_4g": 0,
+      "passes_crashguard_acceleration": 1,
+      "passes_strict_rotation_200dps": 0,
+      "passes_crashguard_rotation": 1
     },
     {
       "recording": "Fall in the roundabout",
@@ -113,10 +113,10 @@
       "peak_acceleration_g": 1.689564657131486,
       "minimum_acceleration_g": 0.011261449746065952,
       "peak_angular_rate_dps": 150.48782486513088,
-      "passes_review1_acceleration_4g": 0,
-      "passes_v2_acceleration": 1,
-      "passes_review1_rotation_200dps": 0,
-      "passes_v2_rotation": 1
+      "passes_strict_acceleration_4g": 0,
+      "passes_crashguard_acceleration": 1,
+      "passes_strict_rotation_200dps": 0,
+      "passes_crashguard_rotation": 1
     },
     {
       "recording": "Fall in a curve",
@@ -125,10 +125,10 @@
       "peak_acceleration_g": 1.4360226168709689,
       "minimum_acceleration_g": 0.13044204050633854,
       "peak_angular_rate_dps": 151.6081563278681,
-      "passes_review1_acceleration_4g": 0,
-      "passes_v2_acceleration": 1,
-      "passes_review1_rotation_200dps": 0,
-      "passes_v2_rotation": 1
+      "passes_strict_acceleration_4g": 0,
+      "passes_crashguard_acceleration": 1,
+      "passes_strict_rotation_200dps": 0,
+      "passes_crashguard_rotation": 1
     },
     {
       "recording": "Acceleration On Curve",
@@ -137,10 +137,10 @@
       "peak_acceleration_g": 1.5366238837913289,
       "minimum_acceleration_g": 0.013821435758300103,
       "peak_angular_rate_dps": 103.73624188210343,
-      "passes_review1_acceleration_4g": 0,
-      "passes_v2_acceleration": 1,
-      "passes_review1_rotation_200dps": 0,
-      "passes_v2_rotation": 1
+      "passes_strict_acceleration_4g": 0,
+      "passes_crashguard_acceleration": 1,
+      "passes_strict_rotation_200dps": 0,
+      "passes_crashguard_rotation": 1
     },
     {
       "recording": "Acceleration On Straight Line",
@@ -149,10 +149,10 @@
       "peak_acceleration_g": 1.5687129697018347,
       "minimum_acceleration_g": 0.0156745459502214,
       "peak_angular_rate_dps": 118.98094686849127,
-      "passes_review1_acceleration_4g": 0,
-      "passes_v2_acceleration": 1,
-      "passes_review1_rotation_200dps": 0,
-      "passes_v2_rotation": 1
+      "passes_strict_acceleration_4g": 0,
+      "passes_crashguard_acceleration": 1,
+      "passes_strict_rotation_200dps": 0,
+      "passes_crashguard_rotation": 1
     },
     {
       "recording": "Fall Like manoeuvre 1",
@@ -161,10 +161,10 @@
       "peak_acceleration_g": 1.7439264186018635,
       "minimum_acceleration_g": 0.0174514235205952,
       "peak_angular_rate_dps": 61.2172399201275,
-      "passes_review1_acceleration_4g": 0,
-      "passes_v2_acceleration": 1,
-      "passes_review1_rotation_200dps": 0,
-      "passes_v2_rotation": 0
+      "passes_strict_acceleration_4g": 0,
+      "passes_crashguard_acceleration": 1,
+      "passes_strict_rotation_200dps": 0,
+      "passes_crashguard_rotation": 0
     },
     {
       "recording": "Fall Like manoeuvre 2",
@@ -173,10 +173,10 @@
       "peak_acceleration_g": 1.5169889555085558,
       "minimum_acceleration_g": 0.01674670206649165,
       "peak_angular_rate_dps": 51.05790657085563,
-      "passes_review1_acceleration_4g": 0,
-      "passes_v2_acceleration": 1,
-      "passes_review1_rotation_200dps": 0,
-      "passes_v2_rotation": 0
+      "passes_strict_acceleration_4g": 0,
+      "passes_crashguard_acceleration": 1,
+      "passes_strict_rotation_200dps": 0,
+      "passes_crashguard_rotation": 0
     },
     {
       "recording": "Fall Like manoeuvre 3",
@@ -185,10 +185,10 @@
       "peak_acceleration_g": 1.7471457242290012,
       "minimum_acceleration_g": 0.01774894063614213,
       "peak_angular_rate_dps": 66.76353154477312,
-      "passes_review1_acceleration_4g": 0,
-      "passes_v2_acceleration": 1,
-      "passes_review1_rotation_200dps": 0,
-      "passes_v2_rotation": 0
+      "passes_strict_acceleration_4g": 0,
+      "passes_crashguard_acceleration": 1,
+      "passes_strict_rotation_200dps": 0,
+      "passes_crashguard_rotation": 0
     },
     {
       "recording": "Harsh breaking On Straight Line",
@@ -197,10 +197,10 @@
       "peak_acceleration_g": 1.6170193812422569,
       "minimum_acceleration_g": 0.013790514183912257,
       "peak_angular_rate_dps": 106.539485651097,
-      "passes_review1_acceleration_4g": 0,
-      "passes_v2_acceleration": 1,
-      "passes_review1_rotation_200dps": 0,
-      "passes_v2_rotation": 1
+      "passes_strict_acceleration_4g": 0,
+      "passes_crashguard_acceleration": 1,
+      "passes_strict_rotation_200dps": 0,
+      "passes_crashguard_rotation": 1
     },
     {
       "recording": "Much degraded track",
@@ -209,10 +209,10 @@
       "peak_acceleration_g": 2.579119151890254,
       "minimum_acceleration_g": 0.015972611927026648,
       "peak_angular_rate_dps": 77.1749153826268,
-      "passes_review1_acceleration_4g": 0,
-      "passes_v2_acceleration": 1,
-      "passes_review1_rotation_200dps": 0,
-      "passes_v2_rotation": 0
+      "passes_strict_acceleration_4g": 0,
+      "passes_crashguard_acceleration": 1,
+      "passes_strict_rotation_200dps": 0,
+      "passes_crashguard_rotation": 0
     }
   ]
 }

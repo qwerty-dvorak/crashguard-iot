@@ -1,4 +1,4 @@
-# CrashGuard Review 2
+# CrashGuard research artifact
 
 Public repository: <https://github.com/qwerty-dvorak/crashguard-iot>
 

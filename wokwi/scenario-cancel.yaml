@@ -1,4 +1,4 @@
-name: Rider cancellation prevents the cloud alert
+name: Rider cancellation prevents the Blynk event
 version: 1
 author: CrashGuard research prototype
 steps:

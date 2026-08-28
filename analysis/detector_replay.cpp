@@ -10,7 +10,7 @@
 
 namespace {
 
-struct LegacyDetector {
+struct OrderedRuleDetector {
   enum class State { Idle, Rotation, Tilt };
   State state = State::Idle;
   uint32_t impactMs = 0;
@@ -64,27 +64,27 @@ struct EventResult {
   int label = 0;
   std::string scenario;
   bool baseline = false;
-  bool legacy = false;
-  bool proposed = false;
+  bool ordered = false;
+  bool crashguard = false;
   int64_t baselineMs = -1;
-  int64_t legacyMs = -1;
-  int64_t proposedMs = -1;
-  int64_t legacyConfirmationDelayMs = -1;
-  int64_t proposedCandidateMs = -1;
-  int64_t proposedConfirmationDelayMs = -1;
+  int64_t orderedMs = -1;
+  int64_t crashguardMs = -1;
+  int64_t orderedConfirmationDelayMs = -1;
+  int64_t crashguardCandidateMs = -1;
+  int64_t crashguardConfirmationDelayMs = -1;
 };
 
 void writeResult(const EventResult &result) {
   if (result.id.empty()) return;
   std::cout << result.id << ',' << result.label << ',' << result.scenario << ','
             << static_cast<int>(result.baseline) << ','
-            << static_cast<int>(result.legacy) << ','
-            << static_cast<int>(result.proposed) << ','
-            << result.baselineMs << ',' << result.legacyMs << ','
-            << result.proposedMs << ','
+            << static_cast<int>(result.ordered) << ','
+            << static_cast<int>(result.crashguard) << ','
+            << result.baselineMs << ',' << result.orderedMs << ','
+            << result.crashguardMs << ','
             << (result.baseline ? 0 : -1) << ','
-            << result.legacyConfirmationDelayMs << ','
-            << result.proposedConfirmationDelayMs << '\n';
+            << result.orderedConfirmationDelayMs << ','
+            << result.crashguardConfirmationDelayMs << '\n';
 }
 
 bool parseLine(const std::string &line, std::string &eventId, int &label,
@@ -115,18 +115,18 @@ bool parseLine(const std::string &line, std::string &eventId, int &label,
 
 int main() {
   std::ios::sync_with_stdio(false);
-  std::cout << "event_id,label,scenario,baseline_prediction,legacy_prediction,"
-               "proposed_prediction,baseline_detection_ms,legacy_detection_ms,"
-               "proposed_detection_ms,baseline_confirmation_delay_ms,"
-               "legacy_confirmation_delay_ms,"
-               "proposed_confirmation_delay_ms\n";
+  std::cout << "event_id,label,scenario,baseline_prediction,ordered_prediction,"
+               "crashguard_prediction,baseline_detection_ms,ordered_detection_ms,"
+               "crashguard_detection_ms,baseline_confirmation_delay_ms,"
+               "ordered_confirmation_delay_ms,"
+               "crashguard_confirmation_delay_ms\n";
 
   std::string line;
   std::getline(std::cin, line);  // CSV header.
   std::string activeId;
   EventResult result;
   crashguard::Detector detector;
-  LegacyDetector legacy;
+  OrderedRuleDetector ordered;
 
   while (std::getline(std::cin, line)) {
     if (line.empty()) continue;
@@ -148,7 +148,7 @@ int main() {
       result.scenario = scenario;
       detector.reset();
       detector.setReferenceGravity(0.0f, 0.0f, 1.0f);
-      legacy = LegacyDetector{};
+      ordered = OrderedRuleDetector{};
     }
 
     const float acceleration = std::sqrt(sample.axG * sample.axG +
@@ -161,22 +161,22 @@ int main() {
 
     const crashguard::Event events = detector.update(sample);
     if (crashguard::hasEvent(events, crashguard::CandidateStarted)) {
-      result.proposedCandidateMs = sample.timeMs;
+      result.crashguardCandidateMs = sample.timeMs;
     }
-    if (!result.proposed &&
+    if (!result.crashguard &&
         crashguard::hasEvent(events, crashguard::CrashConfirmed)) {
-      result.proposed = true;
-      result.proposedMs = sample.timeMs;
-      result.proposedConfirmationDelayMs =
-          result.proposedMs - result.proposedCandidateMs;
+      result.crashguard = true;
+      result.crashguardMs = sample.timeMs;
+      result.crashguardConfirmationDelayMs =
+          result.crashguardMs - result.crashguardCandidateMs;
     }
 
-    legacy.update(sample, detector.features());
-    if (!result.legacy && legacy.detected) {
-      result.legacy = true;
-      result.legacyMs = legacy.detectionMs;
-      result.legacyConfirmationDelayMs =
-          result.legacyMs - legacy.impactMs;
+    ordered.update(sample, detector.features());
+    if (!result.ordered && ordered.detected) {
+      result.ordered = true;
+      result.orderedMs = ordered.detectionMs;
+      result.orderedConfirmationDelayMs =
+          result.orderedMs - ordered.impactMs;
     }
   }
   writeResult(result);

@@ -44,7 +44,7 @@ enum class State : uint8_t {
   Correlating,
   VerifyingRest,
   Countdown,
-  AlertSent
+  AlertDue
 };
 
 enum Event : uint16_t {
@@ -185,12 +185,12 @@ class Detector {
       case State::Countdown:
         if (elapsed(sample.timeMs, countdownStartMs_) >=
             config_.cancelWindowMs) {
-          state_ = State::AlertSent;
+          state_ = State::AlertDue;
           events |= AlertDue;
         }
         break;
 
-      case State::AlertSent:
+      case State::AlertDue:
         break;
     }
 

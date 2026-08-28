@@ -1,70 +1,84 @@
 {
-  "schema_version": 1,
-  "executed_at": "2026-08-28T22:13:59+05:30",
-  "claim_scope": "Wokwi virtual-hardware acceptance tests, not physical-hardware validation",
-  "completed_public_run": {
+  "schema_version": 2,
+  "updated_at": "2026-08-28T22:58:02+05:30",
+  "claim_scope": "Virtual-hardware and compile checks only; no physical-hardware or phone-notification claim",
+  "historical_public_run": {
     "status": "passed",
     "url": "https://github.com/qwerty-dvorak/crashguard-iot/actions/runs/33191679856",
-    "automatic_ci_enabled": false,
-    "note": "The workflow was removed after this single successful run to conserve Wokwi CI quota."
+    "scenarios": [
+      "crash alert deadline",
+      "pothole rejection",
+      "rider cancellation"
+    ],
+    "source_relation": "The run predates the Blynk library integration and serial-message clarification; the detector and circuit behavior are unchanged.",
+    "automatic_ci_enabled": false
   },
-  "toolchain": {
-    "arduino_cli": "1.5.1",
-    "esp32_arduino_core": "3.3.11",
-    "wokwi_cli": "0.26.1 (9d71b975b7eb)",
-    "wokwi_simulation_api": "1.0.0-20260825-g9f67b160"
+  "current_source_checks": {
+    "native_detector_tests": "passed",
+    "deterministic_replay": "passed",
+    "diagram_lint": "passed with one informational warning for Wokwi's undocumented ESP32-DevKitC V4 part identifier",
+    "offline_esp32_compile": {
+      "status": "passed",
+      "flash_bytes": 392955,
+      "static_ram_bytes": 29808,
+      "merged_bin_sha256": "c2f2274a885465882195755acca5dc0676405f829d15debe9ef5a940d9929043",
+      "elf_sha256": "e6f3b10f2460e54b940d3e9dbdba41c93219b74d8dac2526b51045a1cbefb88b"
+    },
+    "blynk_enabled_esp32_compile": {
+      "status": "passed with compile-only placeholders and no network request",
+      "blynk_library": "1.3.5",
+      "transport": "Blynk ESP32 SSL client",
+      "flash_bytes": 1040343,
+      "static_ram_bytes": 49124,
+      "merged_bin_sha256": "f4247fc3a5cde107e8f2a2e069c01a1e06e189f243b1ff52fef5c3339c906631",
+      "elf_sha256": "fc8a936d88e06bfa6b48c1c70c4b7daf79c95c56c1540fb8ab0fb9696d0b648d"
+    },
+    "current_wokwi_cloud_scenarios": "not rerun to conserve the user's limited Wokwi CI minutes",
+    "blynk_cloud_scenario": "provided but not executed because no Blynk test-device token was supplied"
   },
-  "virtual_hardware": {
-    "controller": "board-esp32-devkit-c-v4",
-    "sensor": "wokwi-mpu6050",
-    "serial_uart_wired_explicitly": true
-  },
-  "firmware": {
-    "merged_bin_sha256": "46b7f93fe2bbcec4275044d12750882a485818996d7664db84d6a497921d7712",
-    "elf_sha256": "6474747bee403fa13fb52ae8f430a38f8506c2e2955a0b649dffa150bad0bd40",
-    "flash_bytes": 392947,
-    "static_ram_bytes": 29808,
-    "cloud_credentials_compiled": false
-  },
-  "scenarios": [
+  "expected_current_scenarios": [
     {
       "file": "wokwi/scenario-crash.yaml",
-      "status": "passed",
-      "observations": [
-        "RIDE_ACTIVE",
-        "ROTATION_CONFIRMED",
+      "acceptance": [
         "CRASH_CONFIRMED",
-        "ALERT_SENT"
-      ],
-      "interpretation": "The virtual inertial sequence reached the local alarm and alert-due path. Network delivery was not tested."
+        "ALERT_DUE",
+        "BLYNK_EVENT_SKIPPED reason=not_configured"
+      ]
     },
     {
       "file": "wokwi/scenario-pothole.yaml",
-      "status": "passed",
-      "observations": [
+      "acceptance": [
         "CANDIDATE_REJECTED",
-        "GPIO26 remained low"
-      ],
-      "interpretation": "A 5 g pulse without qualifying rotation was rejected."
+        "GPIO26 remains low"
+      ]
     },
     {
       "file": "wokwi/scenario-cancel.yaml",
-      "status": "passed",
-      "observations": [
-        "CRASH_CONFIRMED",
+      "acceptance": [
         "ALERT_CANCELLED",
-        "GPIO26 low immediately after cancellation",
-        "GPIO26 low after a 16000 ms post-cancellation guard",
-        "ALERT_SENT absent during the guard"
+        "GPIO26 remains low for the post-cancellation guard",
+        "ALERT_DUE remains absent"
+      ]
+    },
+    {
+      "file": "wokwi/scenario-crash-blynk.yaml",
+      "acceptance": [
+        "CRASH_CONFIRMED",
+        "ALERT_DUE",
+        "BLYNK_EVENT_SUBMITTED code=crash_confirmed"
       ],
-      "cloud_transport_retries": 1,
-      "retry_reason": "Wokwi transport closed with code 1006 before simulation startup",
-      "interpretation": "The virtual cancel button suppressed the pending alert beyond its original 15 s deadline."
+      "requires": "A dedicated Blynk test device configured in ignored wokwi/secrets.h"
     }
   ],
+  "toolchain": {
+    "arduino_cli": "1.5.1",
+    "esp32_arduino_core": "3.3.11",
+    "wokwi_cli": "0.26.1 (9d71b975b7eb)"
+  },
   "limitations": [
     "No physical sensor, actuator, power, enclosure, or mounting behavior was measured.",
-    "No Wi-Fi, HTTPS, Blynk, or phone-hotspot delivery was attempted.",
+    "No current-source Wokwi cloud execution or Blynk phone receipt is claimed.",
+    "A submitted Blynk library command is not proof that a phone notification was delivered.",
     "Wokwi sensor controls provide prescribed virtual values rather than a mechanical crash model."
   ]
 }

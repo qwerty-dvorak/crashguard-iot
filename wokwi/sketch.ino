@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <HTTPClient.h>
 #include <WiFi.h>
 #include <Wire.h>
 
@@ -7,9 +6,15 @@
 
 #if __has_include("secrets.h")
 #include "secrets.h"
-#define CRASHGUARD_HAS_SECRETS 1
+#if !defined(BLYNK_TEMPLATE_ID) || !defined(BLYNK_TEMPLATE_NAME) || \
+    !defined(BLYNK_AUTH_TOKEN) || !defined(CRASHGUARD_WIFI_SSID) || \
+    !defined(CRASHGUARD_WIFI_PASSWORD)
+#error "secrets.h must define the Blynk template, device token, and Wi-Fi values"
+#endif
+#include <BlynkSimpleEsp32_SSL.h>
+#define CRASHGUARD_HAS_BLYNK 1
 #else
-#define CRASHGUARD_HAS_SECRETS 0
+#define CRASHGUARD_HAS_BLYNK 0
 #endif
 
 namespace {
@@ -132,7 +137,7 @@ const char *stateName(crashguard::State state) {
     case crashguard::State::Correlating: return "CORRELATING";
     case crashguard::State::VerifyingRest: return "VERIFYING_REST";
     case crashguard::State::Countdown: return "COUNTDOWN";
-    case crashguard::State::AlertSent: return "ALERT_SENT";
+    case crashguard::State::AlertDue: return "ALERT_DUE";
   }
   return "UNKNOWN";
 }
@@ -147,59 +152,47 @@ void setLocalAlarm(bool enabled) {
   }
 }
 
-#if CRASHGUARD_HAS_SECRETS
-String urlEncode(const String &input) {
-  const char hex[] = "0123456789ABCDEF";
-  String encoded;
-  encoded.reserve(input.length() * 3);
-  for (size_t i = 0; i < input.length(); ++i) {
-    const uint8_t c = static_cast<uint8_t>(input[i]);
-    if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-        (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '.') {
-      encoded += static_cast<char>(c);
-    } else {
-      encoded += '%';
-      encoded += hex[c >> 4];
-      encoded += hex[c & 0x0f];
-    }
-  }
-  return encoded;
-}
-#endif
+enum class BlynkEventResult : uint8_t {
+  Submitted,
+  Disabled,
+  WifiUnavailable,
+  CloudUnavailable
+};
 
-bool sendBlynkCrashEvent(const crashguard::Features &features) {
-#if CRASHGUARD_HAS_SECRETS
-  if (WiFi.status() != WL_CONNECTED) return false;
+BlynkEventResult queueBlynkCrashEvent(const crashguard::Features &features) {
+#if CRASHGUARD_HAS_BLYNK
+  if (WiFi.status() != WL_CONNECTED) return BlynkEventResult::WifiUnavailable;
+  if (!Blynk.connected() && !Blynk.connect(5000)) {
+    return BlynkEventResult::CloudUnavailable;
+  }
 
   String description = "CrashGuard confirmed an inertial event; ";
   description += "confirmation state a=" + String(features.accelerationG, 2) + "g, ";
   description += "omega=" + String(features.angularRateDps, 0) + "dps, ";
   description += "tilt=" + String(features.tiltDeg, 0) + "deg. ";
   description += "Location unavailable: no GNSS or companion GPS fix.";
-
-  const String url = String("https://blynk.cloud/external/api/logEvent") +
-                     "?token=" + CRASHGUARD_BLYNK_TOKEN +
-                     "&code=crash_confirmed&description=" +
-                     urlEncode(description);
-  HTTPClient https;
-  https.setConnectTimeout(5000);
-  if (!https.begin(url)) return false;
-  const int status = https.GET();
-  https.end();
-  return status >= 200 && status < 300;
+  Blynk.logEvent("crash_confirmed", description);
+  Blynk.run();
+  return BlynkEventResult::Submitted;
 #else
   (void)features;
-  return false;
+  return BlynkEventResult::Disabled;
 #endif
 }
 
 void connectNetworkWithoutBlockingDetection() {
-#if CRASHGUARD_HAS_SECRETS
+#if CRASHGUARD_HAS_BLYNK
   WiFi.mode(WIFI_STA);
+#if defined(CRASHGUARD_WIFI_CHANNEL)
+  WiFi.begin(CRASHGUARD_WIFI_SSID, CRASHGUARD_WIFI_PASSWORD,
+             CRASHGUARD_WIFI_CHANNEL);
+#else
   WiFi.begin(CRASHGUARD_WIFI_SSID, CRASHGUARD_WIFI_PASSWORD);
+#endif
+  Blynk.config(BLYNK_AUTH_TOKEN);
   Serial.println("WIFI_CONNECTING");
 #else
-  Serial.println("CLOUD_DISABLED copy secrets.h.example to secrets.h");
+  Serial.println("BLYNK_DISABLED copy a secrets example to secrets.h");
 #endif
 }
 
@@ -222,8 +215,21 @@ void printEvent(crashguard::Event events, const crashguard::Features &f) {
     Serial.println("CRASH_CONFIRMED countdown=15s");
   }
   if (crashguard::hasEvent(events, crashguard::AlertDue)) {
-    const bool delivered = sendBlynkCrashEvent(f);
-    Serial.printf("ALERT_SENT cloud_delivery=%s\n", delivered ? "ok" : "not_available");
+    Serial.println("ALERT_DUE");
+    switch (queueBlynkCrashEvent(f)) {
+      case BlynkEventResult::Submitted:
+        Serial.println("BLYNK_EVENT_SUBMITTED code=crash_confirmed");
+        break;
+      case BlynkEventResult::Disabled:
+        Serial.println("BLYNK_EVENT_SKIPPED reason=not_configured");
+        break;
+      case BlynkEventResult::WifiUnavailable:
+        Serial.println("BLYNK_EVENT_SKIPPED reason=wifi_unavailable");
+        break;
+      case BlynkEventResult::CloudUnavailable:
+        Serial.println("BLYNK_EVENT_SKIPPED reason=cloud_unavailable");
+        break;
+    }
   }
 }
 
@@ -261,7 +267,7 @@ void loop() {
     if (crashguard::hasEvent(event, crashguard::Cancelled)) {
       setLocalAlarm(false);
       Serial.println("ALERT_CANCELLED");
-    } else if (detector.state() == crashguard::State::AlertSent) {
+    } else if (detector.state() == crashguard::State::AlertDue) {
       setLocalAlarm(false);
       detector.rearm();
       Serial.println("ALERT_ACKNOWLEDGED");
