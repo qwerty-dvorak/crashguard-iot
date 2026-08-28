@@ -64,8 +64,9 @@ Diagram linting does not execute firmware:
 wokwi-cli lint .
 ```
 
-Running CI simulations requires a Wokwi CI token from the Wokwi dashboard.
-Export it only in the current shell and use the checked-in test runner:
+Running Wokwi cloud simulations requires a Wokwi CI token from the dashboard.
+Export it only in the current shell and use the checked-in test runner when a
+deliberate revalidation is needed:
 
 ```sh
 export WOKWI_CLI_TOKEN='wok_replace_with_your_token'
@@ -73,9 +74,9 @@ export WOKWI_CLI_TOKEN='wok_replace_with_your_token'
 ```
 
 The CLI token is an external account credential and is deliberately not
-stored in this repository. The same runner executes on GitHub Actions using
-the encrypted `WOKWI_CLI_TOKEN` repository secret. Pull requests from forks
-compile the firmware but do not receive that secret.
+stored in this repository. Each execution consumes Wokwi CI quota, so no
+automatic GitHub Actions workflow is enabled. Firmware compilation and
+diagram linting can be repeated without a token or Wokwi simulation minutes.
 
 All three scenarios passed on 28 August 2026 with Wokwi CLI 0.26.1 and
 Simulation API `1.0.0-20260825-g9f67b160`. The cancellation test keeps

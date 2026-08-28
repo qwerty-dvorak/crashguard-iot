@@ -1,7 +1,5 @@
 # CrashGuard Review 2
 
-[![ESP32 build and Wokwi simulation](https://github.com/qwerty-dvorak/crashguard-iot/actions/workflows/wokwi.yml/badge.svg)](https://github.com/qwerty-dvorak/crashguard-iot/actions/workflows/wokwi.yml)
-
 Public repository: <https://github.com/qwerty-dvorak/crashguard-iot>
 
 This repository contains the research report, production ESP32 firmware,
@@ -15,7 +13,6 @@ The main deliverables are:
 - [wokwi/sketch.ino](wokwi/sketch.ino): ESP32 firmware for the physical circuit
 - [wokwi/diagram.json](wokwi/diagram.json): Wokwi circuit file, using Wokwi's required spelling
 - [Wokwi scenarios](wokwi): crash, pothole rejection, and cancel tests
-- [Wokwi CI workflow](.github/workflows/wokwi.yml): pinned ESP32 build and cloud hardware simulation
 - [Wokwi validation record](results/wokwi_validation.json): tool versions, firmware hashes, observations, and limitations
 - [analysis/run_all.sh](analysis/run_all.sh): repeatable data and evaluation pipeline
 - [results/summary.json](results/summary.json): machine-readable metrics and detector parameters

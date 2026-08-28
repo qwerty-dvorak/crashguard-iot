@@ -2,6 +2,12 @@
   "schema_version": 1,
   "executed_at": "2026-08-28T22:13:59+05:30",
   "claim_scope": "Wokwi virtual-hardware acceptance tests, not physical-hardware validation",
+  "completed_public_run": {
+    "status": "passed",
+    "url": "https://github.com/qwerty-dvorak/crashguard-iot/actions/runs/33191679856",
+    "automatic_ci_enabled": false,
+    "note": "The workflow was removed after this single successful run to conserve Wokwi CI quota."
+  },
   "toolchain": {
     "arduino_cli": "1.5.1",
     "esp32_arduino_core": "3.3.11",
