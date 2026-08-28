@@ -1,0 +1,85 @@
+% Included by report.tex. This is a connection-level physical schematic.
+\begin{circuitikz}[american voltages,scale=0.78,transform shape]
+  \tikzset{
+    module/.style={draw,rounded corners=2pt,minimum width=34mm,
+      minimum height=16mm,align=center,fill=blue!4,font=\small},
+    pinlabel/.style={font=\scriptsize,fill=white,inner sep=1.5pt}
+  }
+
+  % Protected cell and charge-only power path.
+  \draw (0,8.2) to[battery1,l_=\shortstack{protected 18650\\3.0--4.2 V, 2600 mAh}]
+        (0,5.2) node[ground]{};
+  \node[module] (charger) at (4.1,8.2) {TP4056 charger\\+ DW01A protection};
+  \draw (0,8.2) -- (charger.west);
+  \draw (charger.south) -- ++(0,-0.55) node[ground]{};
+  \draw (charger.north) -- ++(0,0.75)
+        node[pinlabel,above]{5 V USB charging input};
+  \draw (charger.east) to[spst,l=master switch] ++(2.5,0)
+        coordinate (swout);
+  \node[module] (boost) at (10.5,8.2) {MT3608 boost\\adjusted to 5.0 V};
+  \draw (swout) -- (boost.west);
+  \draw (boost.south) -- ++(0,-0.55) node[ground]{};
+  \draw (boost.east) -- ++(2.0,0) coordinate (vfive)
+        node[pinlabel,above]{+5V rail};
+
+  % Controller and IMU modules.
+  \node[module,minimum width=48mm,minimum height=64mm] (esp) at (15.2,3.2)
+    {\textbf{ESP32 DevKit V1}\\ESP32-WROOM-32};
+  \node[module,minimum width=34mm,minimum height=24mm] (imu) at (4.0,3.2)
+    {\textbf{GY-521}\\MPU-6050\\\scriptsize 100 nF VCC--GND};
+  \draw (vfive) -| (esp.north)
+        node[pinlabel,pos=0.88,right]{VIN/5V};
+  \draw (vfive) ++(-0.7,0) to[C,l_=100 $\mu$F] ++(0,-1.65) node[ground]{};
+  \draw (esp.south) -- ++(0,-0.65) node[ground]{};
+  \draw (imu.south) -- ++(0,-0.65) node[ground]{};
+
+  \coordinate (p3v3) at ([yshift=21mm]esp.west);
+  \coordinate (psda) at ([yshift=7mm]esp.west);
+  \coordinate (pscl) at ([yshift=-5mm]esp.west);
+  \coordinate (padc) at ([yshift=-20mm]esp.west);
+  \coordinate (ivcc) at ([yshift=7mm]imu.east);
+  \coordinate (isda) at (imu.east);
+  \coordinate (iscl) at ([yshift=-7mm]imu.east);
+  \draw (p3v3) -- (ivcc)
+        node[pinlabel,near start,above]{3V3}
+        node[pinlabel,near end,above]{VCC};
+  \draw (psda) -- (isda)
+        node[pinlabel,near start,above]{GPIO21 SDA};
+  \draw (pscl) -- (iscl)
+        node[pinlabel,near start,above]{GPIO22 SCL};
+
+  % Battery measurement after the master switch and before the boost.
+  \draw (swout) coordinate (sensein)
+        to[R,l=100 k$\Omega$] ++(0,-1.55) coordinate (sense);
+  \draw (sense) to[R,l=100 k$\Omega$] ++(0,-1.55) node[ground]{};
+  \draw (sense) -- ++(2.15,0) coordinate (sensecap)
+        to[C,l_=100 nF] ++(0,-1.55) node[ground]{};
+  \draw (sensecap) -- ++(0.7,0) |- (padc)
+        node[pinlabel,near end,below]{GPIO34 ADC1};
+
+  % LED branch.
+  \coordinate (pled) at ([yshift=24mm]esp.east);
+  \draw (pled) -- ++(1.3,0) node[pinlabel,above]{GPIO26}
+        to[R,l=220 $\Omega$] ++(2.0,0)
+        to[leD*,l_=red LED] ++(0,-1.8) node[ground]{};
+
+  % Active piezo branch with a low-side NPN driver.
+  \coordinate (pbuzz) at ([yshift=1mm]esp.east);
+  \draw (pbuzz) -- ++(1.3,0) node[pinlabel,above]{GPIO25}
+        to[R,l=1 k$\Omega$] ++(2.0,0) coordinate (base);
+  \node[npn,anchor=B] (q1) at (base) {};
+  \node[pinlabel,right=7mm of q1] {2N2222};
+  \draw (q1.E) -- ++(0,-0.8) node[ground]{};
+  \draw (base) to[R,l_=10 k$\Omega$] ++(0,-1.35) node[ground]{};
+  \draw (q1.C) to[buzzer,l_=\shortstack{5 V passive\\piezo transducer}] ++(0,2.25)
+        -- ++(1.2,0) |- (vfive);
+
+  % Active-low cancel button.
+  \coordinate (pcancel) at ([yshift=-23mm]esp.east);
+  \draw (pcancel) -- ++(2.7,0)
+        node[pinlabel,above]{GPIO27, internal pull-up}
+        to[push button,l_=CANCEL] ++(0,-1.55) node[ground]{};
+
+  \node[align=left,font=\scriptsize,anchor=north west] at (0,-0.4) {All grounds are common. Powering GY-521 from 3.3 V keeps its I\textsuperscript{2}C pull-ups ESP32-safe.\\
+  Charge only with the master switch open: TP4056/DW01A does not implement load sharing.};
+\end{circuitikz}

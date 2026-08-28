@@ -1,0 +1,2 @@
+# The firmware uses only libraries bundled with the Espressif ESP32 Arduino core.
+# No third-party Arduino libraries are required.

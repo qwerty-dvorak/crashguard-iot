@@ -1,0 +1,50 @@
+name: Crash profile reaches local alarm and cloud attempt
+version: 1
+author: CrashGuard research prototype
+steps:
+  - wait-serial: 'READY'
+  - set-control:
+      part-id: imu
+      control: accelX
+      value: 0.20
+  - set-control:
+      part-id: imu
+      control: accelZ
+      value: 1.02
+  - set-control:
+      part-id: imu
+      control: rotationZ
+      value: 18
+  - delay: 1200ms
+  - set-control:
+      part-id: imu
+      control: rotationX
+      value: 240
+  - delay: 250ms
+  - set-control:
+      part-id: imu
+      control: accelZ
+      value: 5.0
+  - delay: 100ms
+  - set-control:
+      part-id: imu
+      control: accelX
+      value: 0.0
+  - set-control:
+      part-id: imu
+      control: accelY
+      value: 0.94
+  - set-control:
+      part-id: imu
+      control: accelZ
+      value: 0.34
+  - set-control:
+      part-id: imu
+      control: rotationX
+      value: 0
+  - set-control:
+      part-id: imu
+      control: rotationZ
+      value: 0
+  - wait-serial: 'CRASH_CONFIRMED'
+  - wait-serial: 'ALERT_SENT'

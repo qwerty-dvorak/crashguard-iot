@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "author": "CrashGuard research prototype",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-esp32-devkit-v1",
+      "id": "esp",
+      "top": -1.2,
+      "left": -4.8,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-mpu6050",
+      "id": "imu",
+      "top": -106.4,
+      "left": 226.4,
+      "attrs": {
+        "accelX": "0",
+        "accelY": "0",
+        "accelZ": "1",
+        "rotationX": "0",
+        "rotationY": "0",
+        "rotationZ": "0"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "alertLed",
+      "top": 118.8,
+      "left": 239.0,
+      "attrs": {
+        "color": "red",
+        "label": "CRASH"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "ledResistor",
+      "top": 61.55,
+      "left": 172.8,
+      "rotate": 90,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "buzzer",
+      "top": 185.1,
+      "left": 213.6,
+      "attrs": {
+        "volume": "0.1",
+        "mode": "smooth"
+      }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "cancelButton",
+      "top": 167.6,
+      "left": -124.8,
+      "attrs": {
+        "color": "green",
+        "label": "CANCEL",
+        "key": "C",
+        "bounce": "1"
+      }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "batterySense",
+      "top": -135.7,
+      "left": -159.7,
+      "attrs": {
+        "value": "650"
+      }
+    }
+  ],
+  "connections": [
+    ["esp:3V3", "imu:VCC", "red", ["h99.2", "v-19.2"]],
+    ["esp:GND.1", "imu:GND", "black", ["h89.6", "v-9.6"]],
+    ["esp:D22", "imu:SCL", "blue", ["h76.8", "v-67.2"]],
+    ["esp:D21", "imu:SDA", "green", ["h67.2", "v-48"]],
+    ["esp:D26", "ledResistor:1", "red", ["h38.4", "v38.4"]],
+    ["ledResistor:2", "alertLed:A", "red", ["v28.8", "h28.8"]],
+    ["alertLed:C", "esp:GND.2", "black", ["v28.8", "h-124.8"]],
+    ["esp:D25", "buzzer:2", "orange", ["h48", "v105.6"]],
+    ["buzzer:1", "esp:GND.2", "black", ["v19.2", "h-115.2"]],
+    ["cancelButton:1.r", "esp:D27", "green", ["h38.4", "v-19.2"]],
+    ["cancelButton:2.r", "esp:GND.2", "black", ["v48", "h124.8"]],
+    ["batterySense:VCC", "esp:3V3", "red", ["v-19.2", "h96"]],
+    ["batterySense:GND", "esp:GND.1", "black", ["v-9.6", "h115.2"]],
+    ["batterySense:SIG", "esp:D34", "purple", ["h57.6", "v67.2"]]
+  ],
+  "serialMonitor": {
+    "display": "terminal",
+    "newline": "lf"
+  }
+}

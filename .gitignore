@@ -1,0 +1,41 @@
+# Credentials and local environment
+.env
+.venv/
+wokwi/secrets.h
+
+# Python and native build products
+__pycache__/
+*.py[cod]
+analysis/build/
+
+# Arduino and Wokwi build products
+wokwi/build/
+
+# LaTeX intermediate files; the final report PDF is versioned
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.log
+*.lot
+*.nav
+*.out
+*.run.xml
+*.snm
+*.synctex.gz
+*.toc
+
+# Downloaded or fully regenerable large datasets
+data/raw/
+data/generated/simulated_imu.csv.gz
+
+# Original assessment handout is not part of the research artifact
+review-2.pdf
+
+# Editor and operating-system files
+.DS_Store
+*~
+*.swp
