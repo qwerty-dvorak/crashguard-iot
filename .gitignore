@@ -10,6 +10,7 @@ analysis/build/
 
 # Arduino and Wokwi build products
 wokwi/build/
+wokwi/serial-logs/
 
 # LaTeX intermediate files; the final report PDF is versioned
 *.aux

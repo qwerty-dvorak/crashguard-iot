@@ -1,0 +1,64 @@
+name: ESP32 build and Wokwi simulation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/wokwi.yml'
+      - 'wokwi/**'
+  pull_request:
+    paths:
+      - '.github/workflows/wokwi.yml'
+      - 'wokwi/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wokwi-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  firmware-and-scenarios:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Arduino CLI
+        uses: arduino/setup-arduino-cli@81d310742121c928ea9c8bbd407b4217b432ae02 # v2.0.0
+        with:
+          version: '1.5.1'
+
+      - name: Install pinned ESP32 Arduino core
+        run: |
+          arduino-cli config add board_manager.additional_urls \
+            https://espressif.github.io/arduino-esp32/package_esp32_index.json
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32@3.3.11
+
+      - name: Install pinned Wokwi CLI
+        run: |
+          mkdir -p "$RUNNER_TEMP/wokwi-bin"
+          curl -fL --retry 3 \
+            --output "$RUNNER_TEMP/wokwi-bin/wokwi-cli" \
+            https://github.com/wokwi/wokwi-cli/releases/download/v0.26.1/wokwi-cli-linuxstatic-x64
+          printf '%s  %s\n' \
+            72d968150babaf7532c47ab7741eb85a95a6c3e3cfef91ffbcfdb677fd38e811 \
+            "$RUNNER_TEMP/wokwi-bin/wokwi-cli" | sha256sum -c -
+          chmod 0755 "$RUNNER_TEMP/wokwi-bin/wokwi-cli"
+          printf '%s\n' "$RUNNER_TEMP/wokwi-bin" >> "$GITHUB_PATH"
+
+      - name: Compile and run all hardware scenarios
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          WOKWI_CLI_TOKEN: ${{ secrets.WOKWI_CLI_TOKEN }}
+        run: ./wokwi/run-tests.sh
+
+      - name: Compile firmware for untrusted fork pull request
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: |
+          arduino-cli compile --fqbn esp32:esp32:esp32 \
+            --build-path wokwi/build wokwi/arduino-build/sketch

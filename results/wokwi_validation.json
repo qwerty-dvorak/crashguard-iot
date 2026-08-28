@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "executed_at": "2026-08-28T22:13:59+05:30",
+  "claim_scope": "Wokwi virtual-hardware acceptance tests, not physical-hardware validation",
+  "toolchain": {
+    "arduino_cli": "1.5.1",
+    "esp32_arduino_core": "3.3.11",
+    "wokwi_cli": "0.26.1 (9d71b975b7eb)",
+    "wokwi_simulation_api": "1.0.0-20260825-g9f67b160"
+  },
+  "virtual_hardware": {
+    "controller": "board-esp32-devkit-c-v4",
+    "sensor": "wokwi-mpu6050",
+    "serial_uart_wired_explicitly": true
+  },
+  "firmware": {
+    "merged_bin_sha256": "46b7f93fe2bbcec4275044d12750882a485818996d7664db84d6a497921d7712",
+    "elf_sha256": "6474747bee403fa13fb52ae8f430a38f8506c2e2955a0b649dffa150bad0bd40",
+    "flash_bytes": 392947,
+    "static_ram_bytes": 29808,
+    "cloud_credentials_compiled": false
+  },
+  "scenarios": [
+    {
+      "file": "wokwi/scenario-crash.yaml",
+      "status": "passed",
+      "observations": [
+        "RIDE_ACTIVE",
+        "ROTATION_CONFIRMED",
+        "CRASH_CONFIRMED",
+        "ALERT_SENT"
+      ],
+      "interpretation": "The virtual inertial sequence reached the local alarm and alert-due path. Network delivery was not tested."
+    },
+    {
+      "file": "wokwi/scenario-pothole.yaml",
+      "status": "passed",
+      "observations": [
+        "CANDIDATE_REJECTED",
+        "GPIO26 remained low"
+      ],
+      "interpretation": "A 5 g pulse without qualifying rotation was rejected."
+    },
+    {
+      "file": "wokwi/scenario-cancel.yaml",
+      "status": "passed",
+      "observations": [
+        "CRASH_CONFIRMED",
+        "ALERT_CANCELLED",
+        "GPIO26 low immediately after cancellation",
+        "GPIO26 low after a 16000 ms post-cancellation guard",
+        "ALERT_SENT absent during the guard"
+      ],
+      "cloud_transport_retries": 1,
+      "retry_reason": "Wokwi transport closed with code 1006 before simulation startup",
+      "interpretation": "The virtual cancel button suppressed the pending alert beyond its original 15 s deadline."
+    }
+  ],
+  "limitations": [
+    "No physical sensor, actuator, power, enclosure, or mounting behavior was measured.",
+    "No Wi-Fi, HTTPS, Blynk, or phone-hotspot delivery was attempted.",
+    "Wokwi sensor controls provide prescribed virtual values rather than a mechanical crash model."
+  ]
+}

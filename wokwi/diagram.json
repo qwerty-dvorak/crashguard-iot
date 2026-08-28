@@ -4,7 +4,7 @@
   "editor": "wokwi",
   "parts": [
     {
-      "type": "wokwi-esp32-devkit-v1",
+      "type": "board-esp32-devkit-c-v4",
       "id": "esp",
       "top": -1.2,
       "left": -4.8,
@@ -77,20 +77,22 @@
     }
   ],
   "connections": [
+    ["esp:TX", "$serialMonitor:RX", "", []],
+    ["esp:RX", "$serialMonitor:TX", "", []],
     ["esp:3V3", "imu:VCC", "red", ["h99.2", "v-19.2"]],
     ["esp:GND.1", "imu:GND", "black", ["h89.6", "v-9.6"]],
-    ["esp:D22", "imu:SCL", "blue", ["h76.8", "v-67.2"]],
-    ["esp:D21", "imu:SDA", "green", ["h67.2", "v-48"]],
-    ["esp:D26", "ledResistor:1", "red", ["h38.4", "v38.4"]],
+    ["esp:22", "imu:SCL", "blue", ["h76.8", "v-67.2"]],
+    ["esp:21", "imu:SDA", "green", ["h67.2", "v-48"]],
+    ["esp:26", "ledResistor:1", "red", ["h38.4", "v38.4"]],
     ["ledResistor:2", "alertLed:A", "red", ["v28.8", "h28.8"]],
     ["alertLed:C", "esp:GND.2", "black", ["v28.8", "h-124.8"]],
-    ["esp:D25", "buzzer:2", "orange", ["h48", "v105.6"]],
+    ["esp:25", "buzzer:2", "orange", ["h48", "v105.6"]],
     ["buzzer:1", "esp:GND.2", "black", ["v19.2", "h-115.2"]],
-    ["cancelButton:1.r", "esp:D27", "green", ["h38.4", "v-19.2"]],
+    ["cancelButton:1.r", "esp:27", "green", ["h38.4", "v-19.2"]],
     ["cancelButton:2.r", "esp:GND.2", "black", ["v48", "h124.8"]],
     ["batterySense:VCC", "esp:3V3", "red", ["v-19.2", "h96"]],
     ["batterySense:GND", "esp:GND.1", "black", ["v-9.6", "h115.2"]],
-    ["batterySense:SIG", "esp:D34", "purple", ["h57.6", "v67.2"]]
+    ["batterySense:SIG", "esp:34", "purple", ["h57.6", "v67.2"]]
   ],
   "serialMonitor": {
     "display": "terminal",

@@ -51,13 +51,18 @@ steps:
       part-id: cancelButton
       control: pressed
       value: 1
+  - wait-serial: 'ALERT_CANCELLED'
   - delay: 200ms
   - set-control:
       part-id: cancelButton
       control: pressed
       value: 0
-  - wait-serial: 'ALERT_CANCELLED'
   - expect-pin:
       part-id: esp
-      pin: 26
+      pin: '26'
+      value: 0
+  - delay: 16000ms
+  - expect-pin:
+      part-id: esp
+      pin: '26'
       value: 0

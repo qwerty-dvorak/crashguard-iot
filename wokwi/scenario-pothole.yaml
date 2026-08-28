@@ -36,5 +36,5 @@ steps:
   - wait-serial: 'CANDIDATE_REJECTED'
   - expect-pin:
       part-id: esp
-      pin: 26
+      pin: '26'
       value: 0

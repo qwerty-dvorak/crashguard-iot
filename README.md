@@ -1,5 +1,7 @@
 # CrashGuard Review 2
 
+[![ESP32 build and Wokwi simulation](https://github.com/qwerty-dvorak/crashguard-iot/actions/workflows/wokwi.yml/badge.svg)](https://github.com/qwerty-dvorak/crashguard-iot/actions/workflows/wokwi.yml)
+
 Public repository: <https://github.com/qwerty-dvorak/crashguard-iot>
 
 This repository contains the research report, production ESP32 firmware,
@@ -8,19 +10,21 @@ scripts, and the exact-code replay analysis.
 
 The main deliverables are:
 
-- [report.pdf](report.pdf): compiled 19-page research report
+- [report.pdf](report.pdf): compiled 20-page research report
 - [report.tex](report.tex) and [references.bib](references.bib): editable LaTeX sources
 - [wokwi/sketch.ino](wokwi/sketch.ino): ESP32 firmware for the physical circuit
 - [wokwi/diagram.json](wokwi/diagram.json): Wokwi circuit file, using Wokwi's required spelling
 - [Wokwi scenarios](wokwi): crash, pothole rejection, and cancel tests
+- [Wokwi CI workflow](.github/workflows/wokwi.yml): pinned ESP32 build and cloud hardware simulation
+- [Wokwi validation record](results/wokwi_validation.json): tool versions, firmware hashes, observations, and limitations
 - [analysis/run_all.sh](analysis/run_all.sh): repeatable data and evaluation pipeline
 - [results/summary.json](results/summary.json): machine-readable metrics and detector parameters
 - [data/manifest.sha256](data/manifest.sha256): hashes for downloaded archives and generated data
 
-No physical-hardware, road-crash, battery-runtime, or cloud-delivery result is
-claimed. The event metrics are deterministic simulation results. See the
-research integrity statement and limitations in the report before citing any
-number.
+No physical-hardware, road-crash, battery-runtime, or network-delivery result
+is claimed. The event metrics come from deterministic dataset replay. The
+three Wokwi tests are virtual-hardware acceptance results. See the research
+integrity statement and limitations in the report before citing any number.
 
 ## Reproduce the experiments
 

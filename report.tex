@@ -72,8 +72,8 @@ sound alarm, a cancel button, and an optional Blynk event sent over a phone
 hotspot. No physical hardware was available for this review. Consequently,
 the evidence consists of source-level unit tests, exact C++ replay of the
 firmware detector over a deterministic physics-informed dataset, an audit of
-an independent powered-two-wheeler dataset, diagram validation, and an
-executable Wokwi project. The generated evaluation contains
+an independent powered-two-wheeler dataset, diagram validation, and three
+passing Wokwi virtual-hardware scenarios. The generated evaluation contains
 \SimulationEvents{} ten-second events, or \SimulationSamples{} six-axis
 samples at 100 Hz. CrashGuard v2 produced \VTwoTP{} true positives,
 \VTwoTN{} true negatives, \VTwoFP{} false positives, and \VTwoFN{} false
@@ -88,10 +88,12 @@ this report.
 \end{abstract}
 
 \noindent\textbf{Research integrity statement.}
-No physical test, Wokwi cloud run, battery-runtime measurement, network
-delivery measurement, or real road crash is represented as completed. A
-Wokwi CI token is an external credential and is not committed. The reported
-classification results come only from deterministic replay and are labelled
+No physical-hardware test, battery-runtime measurement, network-delivery
+measurement, or real road crash is represented as completed. Three Wokwi
+cloud simulations were executed using prescribed virtual sensor controls;
+they validate firmware control flow, not road performance. A Wokwi CI token
+is an external credential and is not committed. The reported classification
+metrics come only from deterministic dataset replay and are labelled
 accordingly.
 
 \tableofcontents
@@ -650,8 +652,10 @@ and rate limiting.
 
 Wokwi requires the filename \code{diagram.json}; the commonly mistyped
 \code{daigram.json} will not be discovered. The supplied diagram contains an
-ESP32 DevKit V1, MPU-6050, LED and resistor, buzzer, button, and a
-potentiometer that emulates the battery divider. Its pin map matches
+ESP32-DevKitC V4 virtual target, MPU-6050, LED and resistor, buzzer, button,
+and a potentiometer that emulates the battery divider. The production target
+remains the ESP32 DevKit V1; the virtual board exposes the same GPIOs used by
+the design. Its pin map matches
 \Cref{tab:trace,fig:circuit}. Wokwi's MPU control values are in g and
 degree/s, so scenario values map directly to firmware units
 ~\cite{wokwimpu}. The official diagram and automation formats are used
@@ -671,23 +675,59 @@ tilted 1 g rest pose & \code{CRASH\_CONFIRMED}, followed after 15 s by
 Pothole & Qualifying motion and 5 g pulse without rotation &
 \code{CANDIDATE\_REJECTED}; GPIO26 remains low \\
 Cancel & Same fall signature, then active-low cancel press during countdown
-& \code{ALERT\_CANCELLED}; GPIO26 returns low and no alert is due \\
+& \code{ALERT\_CANCELLED}; GPIO26 stays low beyond the original alert
+deadline, and \code{ALERT\_SENT} is absent \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
 The Wokwi diagram was linted with Wokwi CLI 0.26.1 with no errors. Its only
-informational result is that the widely used
-\code{wokwi-esp32-devkit-v1} part identifier is undocumented and could
-change. The source is compiled locally for the ESP32 target. Cloud scenario
-execution requires the user's Wokwi CI token. The
-scenario files are executable acceptance tests, but this report does not
-invent a passing cloud run in the absence of that credential. Wokwi also
-does not model cell chemistry, TP4056 charging behavior, boost-converter
-efficiency, mechanical mounting, waterproofing, or real vibration.
+informational result says the \path{board-esp32-devkit-c-v4} identifier is
+undocumented by the linter registry. On 28 August 2026, all three scenarios
+passed against Wokwi Simulation API
+\path{1.0.0-20260825-g9f67b160}. The crash run observed
+\path{CRASH_CONFIRMED} and \path{ALERT_SENT}; the pothole run observed
+\path{CANDIDATE_REJECTED} with GPIO26 low; and the cancellation run kept
+GPIO26 low through a 16 s post-cancellation guard while treating any
+\path{ALERT_SENT} as failure. One cancellation attempt was repeated after
+the cloud transport closed with code 1006 before simulator startup. The
+passing run then completed every scenario step.
+
+The offline firmware deliberately contained no hotspot or Blynk secrets, so
+\path{ALERT_SENT cloud_delivery=not_available} validates the alert-due
+control path rather than network delivery. Wokwi also does not model cell
+chemistry, TP4056 charging behavior, boost-converter efficiency, mechanical
+mounting, waterproofing, or real vibration. The structured validation record
+and firmware hashes are in \path{results/wokwi_validation.json}.
 
 \section{Results}
 \label{sec:results}
+
+\subsection{Wokwi firmware-in-the-loop acceptance}
+
+The three executable scenarios passed with the production firmware binary;
+no simulation-only sensor branch was compiled. These tests cover state
+transitions and GPIO behavior under prescribed inputs, not crash-detection
+accuracy or network reliability. The exact observations are summarized in
+\Cref{tab:wokwi-results}.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Authenticated Wokwi cloud-simulation results.}
+\label{tab:wokwi-results}
+\begin{tabularx}{\textwidth}{@{}p{0.18\textwidth}p{0.14\textwidth}X@{}}
+\toprule
+Scenario & Result & Observed acceptance evidence \\
+\midrule
+Crash & Pass & Ride activity, rotation confirmation, crash confirmation,
+and alert-due event after the 15 s countdown \\
+Pothole & Pass & Candidate rejection and GPIO26 low \\
+Cancel & Pass & Crash confirmation, cancellation, GPIO26 low immediately
+and after 16 s, with no alert-due event \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \subsection{Deterministic event replay}
 
@@ -818,26 +858,21 @@ sha256sum -c data/manifest.sha256
 arduino-cli config add board_manager.additional_urls \
   https://espressif.github.io/arduino-esp32/package_esp32_index.json
 arduino-cli core update-index
-arduino-cli core install esp32:esp32
+arduino-cli core install esp32:esp32@3.3.11
 (cd wokwi && arduino-cli compile --fqbn esp32:esp32:esp32 \
   --build-path build arduino-build/sketch)
 
 latexmk -pdf report.tex
 \end{lstlisting}
 
-To lint and run Wokwi scenarios after obtaining a CI token:
+To lint and run all Wokwi scenarios after obtaining a CI token:
 
 \begin{lstlisting}[language=bash,numbers=none]
 curl -L https://wokwi.com/ci/install.sh | sh
 export PATH="$HOME/bin:$PATH"
 (cd wokwi && wokwi-cli lint .)
 export WOKWI_CLI_TOKEN='wok_replace_with_your_token'
-(cd wokwi && wokwi-cli . --scenario scenario-crash.yaml \
-  --timeout 25000 --expect-text ALERT_SENT)
-(cd wokwi && wokwi-cli . --scenario scenario-pothole.yaml \
-  --timeout 10000 --expect-text CANDIDATE_REJECTED)
-(cd wokwi && wokwi-cli . --scenario scenario-cancel.yaml \
-  --timeout 12000 --expect-text ALERT_CANCELLED)
+./wokwi/run-tests.sh
 \end{lstlisting}
 
 \section{Conclusion and next validation stage}
@@ -874,6 +909,8 @@ Path & Purpose \\
 \code{wokwi/crash\_detector.h} & Portable exact state-machine implementation \\
 \code{wokwi/diagram.json} & Wokwi circuit description \\
 \code{wokwi/scenario-*.yaml} & Automated crash, rejection, and cancel stimuli \\
+\code{wokwi/run-tests.sh} & Firmware build, lint, and cloud-scenario runner \\
+\code{.github/workflows/wokwi.yml} & Pinned continuous-integration workflow \\
 \code{analysis/generate\_simulated\_}\\\code{dataset.py} & Deterministic physics-informed generator \\
 \code{analysis/detector\_replay.cpp} & Exact firmware detector replay and baselines \\
 \code{analysis/evaluate.py} & Metrics, Wilson intervals, external audit, and figures \\
@@ -881,6 +918,7 @@ Path & Purpose \\
 \code{data/download\_datasets.sh} & Idempotent source-archive downloader, verifier, and PTW extractor \\
 \code{data/manifest.sha256} & Source and generated archive hashes \\
 \code{results/summary.json} & Machine-readable configuration, metrics, and external features \\
+\code{results/wokwi\_validation.json} & Wokwi versions, firmware hashes, observations, and limitations \\
 \bottomrule
 \end{longtable}
 
