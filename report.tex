@@ -1,12 +1,12 @@
-\documentclass[11pt,a4paper]{article}
+\documentclass[12pt,a4paper]{article}
 
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{microtype}
-\usepackage[a4paper,margin=22mm]{geometry}
+\usepackage[a4paper,margin=24mm]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
-\usepackage{booktabs,longtable,tabularx,array,multirow}
+\usepackage{booktabs,tabularx,array}
 \usepackage[table]{xcolor}
 \usepackage{enumitem}
 \usepackage{caption}
@@ -14,736 +14,332 @@
 \usepackage{pdflscape}
 \usepackage[american voltages]{circuitikz}
 \usetikzlibrary{positioning,arrows.meta}
-\usepackage{listings}
 \usepackage{xurl}
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage[colorlinks=true,allcolors=blue!55!black]{hyperref}
-\usepackage[nameinlink,noabbrev]{cleveref}
 
 \input{project-facts.tex}
 \input{results/generated_macros.tex}
 
-\definecolor{cgblue}{HTML}{174A7E}
-\definecolor{cggreen}{HTML}{247B63}
-\definecolor{cgred}{HTML}{B33A3A}
-\definecolor{cggray}{HTML}{F1F4F7}
 \newcommand{\degree}{\ensuremath{^{\circ}}}
-\newcommand{\code}[1]{\texttt{#1}}
-\newcommand{\risk}[1]{\textcolor{cgred}{\textbf{#1}}}
-\renewcommand{\arraystretch}{1.18}
+\linespread{1.04}
+\renewcommand{\arraystretch}{1.15}
 \setlist{nosep,leftmargin=*}
 \captionsetup{font=small,labelfont=bf}
-\lstset{
-  basicstyle=\ttfamily\footnotesize,
-  breaklines=true,
-  frame=single,
-  columns=fullflexible,
-  showstringspaces=false,
-  backgroundcolor=\color{cggray},
-  keywordstyle=\color{cgblue}\bfseries,
-  commentstyle=\color{cggreen},
-  numbers=left,
-  numberstyle=\tiny\color{gray},
-  xleftmargin=1.5em,
-  framexleftmargin=1.2em
-}
+\setlength{\bibsep}{2pt}
 \bibliographystyle{IEEEtran}
 
 \title{\textbf{\ProjName: Handlebar-Mounted Crash Detection and Emergency Alert System}\\
-\large Implementation, Modelling, Dataset Audit, and Wokwi Simulation}
+\large Design, Simulation, and Evaluation}
 \author{\TeamMemberA{} (\TeamRegA) \and
         \TeamMemberB{} (\TeamRegB) \and
         \TeamMemberC{} (\TeamRegC)}
 \date{Programming for IoT Boards Lab (BCSE312P)\\
 Class VL2026270103137 \quad Faculty: Syamasudha Veeragandham (22727)\\
-Assessment 5, Review 2 \quad 28 August 2026\\[4pt]
-\url{https://github.com/qwerty-dvorak/crashguard-iot}}
+Assessment 5, Review 2 \quad 28 August 2026}
 
 \begin{document}
 
 \maketitle
 
 \begin{abstract}
-This report converts the approved CrashGuard proposal into an ESP32 prototype
-with a repeatable experimental workflow while separating measurements from
-assumptions. The system
-uses a handlebar-mounted MPU-6050, an ESP32 DevKit V1, a local light and
-sound alarm, a cancel button, and an optional Blynk event sent over a phone
-hotspot. No physical hardware was available for this review. Consequently,
-the evidence consists of source-level unit tests, exact C++ replay of the
-firmware detector over a deterministic physics-informed dataset, an audit of
-an independent powered-two-wheeler dataset, diagram validation, and three
-passing Wokwi virtual-hardware scenarios. The generated evaluation contains
-\SimulationEvents{} ten-second events, or \SimulationSamples{} six-axis
-samples at 100 Hz. CrashGuard v2 produced \VTwoTP{} true positives,
-\VTwoTN{} true negatives, \VTwoFP{} false positives, and \VTwoFN{} false
-negatives: sensitivity \VTwoSensitivity{} and specificity
-\VTwoSpecificity{}. These are simulation results, not claims of road-crash
-performance. The original Review-1 rule was too strict, and the supplied
-base paper contains reproducibility and numerical inconsistencies. Both are
-therefore treated as inputs to be tested, not final truth. All firmware,
-Wokwi wiring, scenarios, dataset acquisition and generation scripts, recorded
-hashes, analysis code, derived results, and paper sources are delivered with
-this report.
+CrashGuard is a low-cost prototype for detecting fall-like motorcycle events
+and starting a rider-cancellable emergency alert. It combines an ESP32,
+handlebar-mounted MPU-6050, LED, piezo alarm, cancel button, and optional Blynk
+notification. Physical hardware was unavailable for this review, so the
+evidence is limited to deterministic data replay, an independent
+powered-two-wheeler dataset audit, native tests, target compilation, and three
+Wokwi virtual-hardware scenarios. The proposed state machine correlates
+acceleration, rotation, orientation change, and post-event rest instead of
+using a single impact threshold. On 675 generated ten-second events it
+produced \VTwoTP{} true positives, \VTwoTN{} true negatives,
+\VTwoFP{} false positives, and \VTwoFN{} false negatives, corresponding to
+\VTwoSensitivity{} sensitivity and \VTwoSpecificity{} specificity. These are
+simulation results and must not be interpreted as road-crash accuracy. The
+study also shows that the original 4 g and 200 $\degree$/s rule is too strict
+for the closest public motorcycle data. The outcome is a testable prototype
+and a clear plan for later bench and road validation.
 \end{abstract}
 
-\noindent\textbf{Research integrity statement.}
-No physical-hardware test, battery-runtime measurement, network-delivery
-measurement, or real road crash is represented as completed. Three Wokwi
-cloud simulations were executed using prescribed virtual sensor controls;
-they validate firmware control flow, not road performance. A Wokwi CI token
-is an external credential and is not committed. The reported classification
-metrics come only from deterministic dataset replay and are labelled
-accordingly.
+\noindent\textbf{Evidence statement.}
+No physical crash, battery-runtime test, or network-delivery measurement is
+claimed. Wokwi verifies virtual sensor, firmware, button, and GPIO behavior;
+it does not reproduce vehicle mechanics or prove field safety.
 
+\clearpage
 \tableofcontents
-\listoffigures
-\listoftables
 \clearpage
 
-\section{Problem, scope, and contributions}
+\section{Introduction and scope}
 
-India recorded 172,890 road deaths in 2023; 77,539, or 44.8\%, were users of
-two-wheelers according to the latest detailed MoRTH report available at the
-time of this review~\cite{morth2023}. CrashGuard addresses one narrow part of
-this problem: reducing the interval between an inertial event and an alert.
-It does not prevent a crash, assess injury, guarantee communication, or
-replace emergency services.
+India recorded 172,890 road deaths in 2023, including 77,539 two-wheeler
+users~\cite{morth2023}. CrashGuard addresses only the delay between a
+fall-like inertial event and an alert attempt. It does not prevent crashes,
+estimate injury, guarantee Internet access, or replace emergency services.
 
-The technical question is whether a low-cost, vehicle-mounted six-axis IMU
-can reject common high-dynamic riding events while retaining sensitivity to
-fall-like signatures. Three research questions guide the work:
+The project investigates three questions:
 
 \begin{enumerate}[label=\textbf{RQ\arabic*:}]
-  \item Does temporal correlation of impact, rotation, and persistent rest
-        reduce false triggers relative to an acceleration-only rule?
-  \item Do the original Review-1 thresholds survive comparison with an
-        independent powered-two-wheeler dataset?
-  \item Can the same production C++ decision logic execute on an ESP32,
-        under host replay, and in Wokwi without a simulation-only sensor
-        branch?
+  \item Can impact, rotation, and tilted rest reject high-dynamic non-crash
+        riding events better than acceleration alone?
+  \item Are the original Review-1 thresholds consistent with independent
+        powered-two-wheeler recordings?
+  \item Can one compact decision method run in native replay and on an ESP32
+        while producing the expected virtual-hardware behavior?
 \end{enumerate}
 
-The contribution is not a claim of a finished safety product. It is a
-falsifiable prototype package with: (i) a corrected electrical design,
-(ii) a state-machine detector with centralized parameters, (iii) a public
-dataset audit, (iv) a deterministic robustness dataset, (v) three algorithm
-comparisons, and (vi) automated firmware-level Wokwi scenarios.
+The main contribution is an interpretable state machine with a complete
+electrical design, repeatable simulated event set, public-data sanity check,
+and automated Wokwi scenarios. Machine learning is deferred because no large,
+representative, labelled dataset exists for this exact vehicle and mounting
+position.
 
-\subsection{Assessment traceability}
+\section{Evidence from the base paper and related work}
 
-\begin{table}[H]
-\centering
-\small
-\caption{Mapping from the Review-2 brief to evidence in this package.}
-\label{tab:trace}
-\begin{tabularx}{\textwidth}{@{}p{0.23\textwidth}X p{0.25\textwidth}@{}}
-\toprule
-Required item & Delivered evidence & Primary files or sections \\
-\midrule
-Complete circuit & Power, sensor, GPIO, actuator driver, ADC divider, and
-charging constraint & \Cref{sec:circuit}; \code{wokwi/diagram.json} \\
-Dataset or collection & Two downloaded archives, processed external PTW
-recordings, and generated event data & \Cref{sec:data}; \code{data/} \\
-Mathematical model & Equations, parameters, state transitions, and timing
-rules & \Cref{sec:model}; \code{crash\_detector.h} \\
-Algorithm comparison & Acceleration baseline, Review-1 rule, and v2 state
-machine & \Cref{sec:algorithms,sec:results} \\
-Working simulation & Wokwi circuit plus crash, rejection, and cancel
-automation scenarios & \Cref{sec:wokwi}; \code{wokwi/} \\
-Code implementation & Production ESP32 sketch, portable detector, unit
-tests, and exact replay executable & \Cref{sec:software}; \code{analysis/} \\
-\bottomrule
-\end{tabularx}
-\end{table}
+The supplied pIOT base paper uses a shin-mounted wearable, 50 Hz IMU windows,
+and a CNN-transformer for human activity and fall recognition
+~\cite{tian2026transformer}. Its useful lessons are that six-axis temporal
+context matters, accuracy alone is insufficient for an imbalanced problem,
+and implementation limits should influence model selection. Its reported
+human-fall score cannot be transferred to a motorcycle handlebar because the
+moving body, orientation, vibration, label, and sampling pipeline differ.
 
-\section{Critical audit of the supplied base paper}
-\label{sec:baseaudit}
+The paper was treated as evidence to audit, not final truth. Its stated ROC
+point $(\mathrm{FPR},\mathrm{TPR})=(0.055,0.905)$ implies an AUC of at least
+$0.905(1-0.055)=0.855$ for any valid nondecreasing ROC curve, which conflicts
+with the reported AUC of 0.768. It also describes the fixed-point format as
+both 8-bit and Q7.8, and the downloaded archive does not contain a complete
+manifest for reproducing the paper's final windows, labels, augmentation, and
+subject splits. Therefore, neither its numerical result nor model is reused
+as CrashGuard performance evidence.
 
-The supplied paper by Tian et al.~\cite{tian2026transformer} is a useful
-methodological reference, but it solves a different sensing problem. Its
-device is attached to a person's shin, samples an LSM6DSM at 50 Hz, segments
-170-sample windows, and classifies human activities and falls with a
-CNN-transformer. CrashGuard is fixed to a motorcycle handlebar, samples an
-MPU-6050 at 100 Hz, and detects vehicle dynamics. Mounting location changes
-the signal-generating body, reference orientation, vibration spectrum, and
-meaning of a fall label. Directly copying its network or its metrics would
-therefore be a category error.
+Motorcycle-specific research provides the stronger design basis. Boubezoul
+et al. published a rule-based powered-two-wheeler detector and released four
+fall plus seven extreme-manoeuvre recordings~\cite{boubezoul2013algorithm,
+boubezoul2019dataset}. Gelmini et al. designed and experimentally validated
+two-wheeler crash logic~\cite{gelmini2019validation,gelmini2021novel}.
+Mahariba et al. applied conventional machine learning to the Boubezoul data
+~\cite{mahariba2022ml}, while Lee et al. compared threshold, supervised, and
+unsupervised e-scooter methods~\cite{lee2024escooter}. These studies support
+multi-feature temporal reasoning, but their results are not directly
+comparable because placements, vehicles, labels, and test protocols differ.
 
-\begin{table}[H]
-\centering
-\small
-\caption{What is transferred from the base paper and what is not.}
-\begin{tabularx}{\textwidth}{@{}p{0.24\textwidth}XX@{}}
-\toprule
-Aspect & Valid lesson & CrashGuard decision \\
-\midrule
-Six-axis time series & Acceleration alone does not encode the temporal
-sequence adequately & Correlate acceleration, angular rate, orientation,
-and post-event rest \\
-Class imbalance & Accuracy can hide misses when the minority event is rare
-& Report TP, TN, FP, FN, sensitivity, specificity, precision, and F1 \\
-Long temporal context & Pre-event and post-event evidence matter & Use a
-small deterministic state machine instead of a 3.4 s tensor model \\
-Hardware co-design & Model choice must respect memory, power, and latency &
-Use constant-memory arithmetic suitable for the ESP32 \\
-Reported human-fall score & Useful only for its stated dataset and placement
-& Do not use 93.1\% as motorcycle evidence \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\section{System design}
 
-The paper and accompanying archive were audited rather than accepted at
-face value. Four issues matter for replication:
-
-\begin{enumerate}
-  \item It reports an ROC operating point $({\rm FPR},{\rm TPR})=(0.055,
-        0.905)$ and AUC 0.768. Any nondecreasing ROC curve passing through
-        that point has the lower bound
-        \begin{equation}
-          {\rm AUC}\geq {\rm TPR}(1-{\rm FPR})
-          =0.905(1-0.055)=0.855,
-        \end{equation}
-        even if it contributes no area before the point. The published AUC
-        and operating point cannot both describe the same valid ROC curve.
-  \item It calls the deployment representation both ``8-bit'' and
-        ``Q7.8''. Fixed-point Q notation varies, but Q7.8 requires more than
-        eight total bits under conventional definitions. An exact sign,
-        integer, fraction, saturation, and rounding specification is absent.
-  \item The paper reports 9,195 and 42,351 windows, class ratios,
-        augmentation, and subject-level evaluation. The downloaded
-        HealthLINK archive contains raw recording files but no complete
-        machine-readable label, window, split, and augmentation manifest
-        sufficient to reconstruct those two tensors exactly.
-  \item Its 502 kB reported model footprint, FPGA-specific resource claims,
-        and human-body placement do not establish feasibility or validity on
-        an ESP32 handlebar unit.
-\end{enumerate}
-
-The archive is retained and hashed for provenance, but is not mixed into the
-motorcycle evaluation. This is a deliberate exclusion based on domain and
-label integrity, not an attempt to discard inconvenient data.
-
-\section{Related research and design position}
-
-The strongest directly relevant lineage is Boubezoul et al. Their 2013
-detector used powered-two-wheeler dynamics~\cite{boubezoul2013algorithm}, and
-their later data article released four controlled fall recordings and seven
-critical or extreme manoeuvre recordings~\cite{boubezoul2019dataset}.
-Gelmini et al. developed and experimentally validated vehicle-mounted crash
-logic and later a novel two-wheeler algorithm~\cite{gelmini2019validation,
-gelmini2021novel}. Mahariba et al. used the Boubezoul data for a machine
-learning study~\cite{mahariba2022ml}. Lee et al. compared threshold,
-supervised, and unsupervised IMU approaches for e-scooter pre-impact fall
-detection~\cite{lee2024escooter}. The 2026 VZCrash release is much larger,
-with real fleet crashes, but its commercial four-wheel vehicle population
-does not remove the powered-two-wheeler domain gap~\cite{bianconcini2026vzcrash}.
-
-\begin{table}[H]
-\centering
-\scriptsize
-\caption{Research comparison. Reported scores are not directly comparable
-because vehicles, placements, labels, and protocols differ.}
-\begin{tabularx}{\textwidth}{@{}p{0.18\textwidth}p{0.17\textwidth}p{0.21\textwidth}X@{}}
-\toprule
-Work & Platform and data & Method & Relevance or limitation \\
-\midrule
-Tian et al., 2026 & Shin device; 50 Hz; human falls & CNN plus multi-head
-attention & Strong data and metric lessons; wrong sensing body for this
-system; audit issues in \Cref{sec:baseaudit} \\
-Boubezoul et al., 2013/2019 & Instrumented PTW; 1 kHz; four falls and seven
-extreme records & Rules based on vehicle dynamics & Closest public raw data;
-small event count and limited sensor ranges \\
-Gelmini et al., 2019/2021 & Two-wheeled vehicle tests & Engineered crash
-algorithm and validation & Directly supports staged vehicle-dynamic evidence;
-implementation is not this ESP32 prototype \\
-Mahariba et al., 2022 & Public PTW inertial recordings & Conventional machine
-learning & Demonstrates reuse of the PTW dataset; dataset scale remains small \\
-Lee et al., 2024 & E-scooter, 60 Hz, 20 participants & Threshold, supervised,
-and autoencoder models & Supports multi-feature thresholds and shows that a
-small rule can compete in a controlled protocol \\
-VZCrash, 2026 & 73,010 commercial vehicles, 100 Hz IMU & Threshold and deep
-learning benchmarks & Scale and real-crash realism are valuable; vehicle and
-mounting domains differ \\
-This work & Handlebar model; 100 Hz; 675 simulated events plus 11 public PTW
-records & Activity-gated, symmetric impact-rotation correlation, tilted-rest
-verification & Exact deployable rule and open replay; no physical validation \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-The literature does not justify selecting a complex model merely because one
-is available. A supervised network would require a sufficiently large,
-representative, labelled dataset from the target motorcycle placement and a
-subject or vehicle independent split. That dataset is not available here.
-The current rule is transparent, constant-memory, testable sample by sample,
-and appropriate for the evidence level. ML remains a later comparison after
-physical data collection.
-
-\section{System architecture}
+The MPU-6050 is sampled at 100 Hz. Detection remains local on the ESP32. A
+confirmed event activates the LED and piezo, then starts a 15 s cancellation
+window. If the rider does not cancel, the firmware attempts a Blynk event over
+a phone hotspot~\cite{blynkevents}. The hotspot supplies connectivity only;
+it does not give the ESP32 the phone's location. No coordinates are therefore
+invented.
 
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[
-  node distance=8mm and 9mm,
-  box/.style={draw,rounded corners,align=center,minimum height=11mm,
-    minimum width=28mm,fill=blue!4,font=\small},
+  node distance=7mm and 8mm,
+  box/.style={draw,rounded corners,align=center,minimum height=10mm,
+    minimum width=27mm,fill=blue!4,font=\small},
   arrow/.style={-Latex,thick}
 ]
-\node[box] (imu) {MPU-6050\\100 Hz raw IMU};
-\node[box,right=of imu] (features) {ESP32 feature\\calculation};
-\node[box,right=of features] (state) {CrashGuard v2\\state machine};
-\node[box,right=of state] (local) {LED + buzzer\\15 s cancel};
-\node[box,below=of local] (cloud) {Blynk event\\via phone hotspot};
-\node[box,below=of state] (button) {CANCEL button};
-\draw[arrow] (imu) -- node[above,font=\scriptsize]{I\textsuperscript{2}C} (features);
-\draw[arrow] (features) -- (state);
-\draw[arrow] (state) -- (local);
-\draw[arrow] (button) -- (state);
-\draw[arrow] (local) -- node[right,font=\scriptsize]{if not cancelled} (cloud);
+\node[box] (imu) {MPU-6050\\100 Hz};
+\node[box,right=of imu] (esp) {ESP32\\state machine};
+\node[box,right=of esp] (alarm) {LED + piezo\\15 s cancel};
+\node[box,right=of alarm] (cloud) {Blynk\\event attempt};
+\node[box,below=of alarm] (button) {CANCEL button};
+\draw[arrow] (imu) -- node[above,font=\scriptsize]{I\textsuperscript{2}C} (esp);
+\draw[arrow] (esp) -- (alarm);
+\draw[arrow] (alarm) -- (cloud);
+\draw[arrow] (button) -- (alarm);
 \end{tikzpicture}
-\caption{Operational architecture. Detection and cancellation remain local;
-network availability affects delivery, not sensing.}
+\caption{CrashGuard operating sequence. Detection and cancellation do not
+depend on the network.}
 \label{fig:architecture}
 \end{figure}
 
-The firmware attempts one Blynk event after a confirmed event remains
-uncancelled for 15 s. Current Blynk device events can trigger notifications
-and the device HTTPS API accepts an event code and description
-~\cite{blynkevents}. The phone hotspot supplies Internet connectivity only.
-It does not automatically expose the phone's GPS position to ESP32 code.
-Therefore, this implementation explicitly sends ``Location unavailable''.
-A location claim requires either a GNSS receiver or a separately developed
-and consented companion application.
+\begin{table}[H]
+\centering
+\small
+\caption{Main hardware and ESP32 connections.}
+\begin{tabularx}{\textwidth}{@{}p{0.24\textwidth}p{0.20\textwidth}X@{}}
+\toprule
+Function & Connection & Design reason \\
+\midrule
+MPU-6050 & SDA GPIO21, SCL GPIO22, 3.3 V & 400 kHz I\textsuperscript{2}C;
+3.3 V avoids unsafe 5 V pull-ups \\
+Visual alarm & GPIO26 through 220 $\Omega$ LED resistor & Local indication \\
+Piezo alarm & GPIO25 through 1 k$\Omega$ and 2N2222 & Keeps sounder current
+out of the GPIO \\
+Cancel button & GPIO27 to ground, internal pull-up & Active-low input without
+a floating state \\
+Battery monitor & GPIO34 through 100 k$\Omega$/100 k$\Omega$ divider & ADC1
+remains usable with Wi-Fi \\
+Power & Protected 18650, TP4056/DW01A, MT3608 at 5.0 V & Portable supply with
+cell protection \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
-\section{Complete electrical design}
-\label{sec:circuit}
+The MPU-6050 uses $\pm16g$ and $\pm2000\degree$/s ranges to reduce immediate
+saturation during rapid motion~\cite{mpu6050datasheet}. GPIO34 is input-only
+and belongs to ADC1, making it suitable for battery sensing while Wi-Fi is
+active~\cite{esp32datasheet}. A 100 $\mu$F rail capacitor and local 100 nF
+capacitors reduce short supply disturbances. The selected TP4056 module is a
+charger with protection, not a power-path controller; the prototype must be
+switched off while charging.
+
+At an estimated average 5 V load of 120 mA, the rail power is 0.60 W. With a
+3.7 V cell and assumed 90\% boost efficiency,
+\begin{equation}
+ I_{cell}\approx\frac{0.60}{3.7(0.90)}=0.180\ \mathrm{A}.
+\end{equation}
+Using 90\% of a 2600 mAh cell gives an ideal estimate of about 13 h. This is a
+sizing calculation, not a measured runtime.
 
 \begin{landscape}
 \begin{figure}[p]
 \centering
-\input{figures/complete-circuit.tex}
-\caption{Complete deployable circuit. The Wokwi diagram substitutes a
-virtual low-current piezo directly on GPIO25, while physical hardware uses
-the shown NPN driver.}
+\resizebox{0.94\linewidth}{!}{\input{figures/complete-circuit.tex}}
+\caption{Complete physical circuit. Wokwi uses a low-current virtual piezo
+directly on GPIO25; physical hardware uses the shown transistor driver.}
 \label{fig:circuit}
 \end{figure}
 \end{landscape}
 
-\subsection{Pin mapping and electrical rationale}
+\section{Data and decision method}
+
+Three data sources have different roles, summarized in Table~\ref{tab:data}.
+The HealthLINK archive was downloaded to audit the base-paper provenance but
+was excluded from motorcycle metrics because its labels and sensing body do
+not match this problem~\cite{healthlinkarchive}. The Boubezoul powered-
+two-wheeler recordings provide an independent feature check. The generated
+set provides repeatable complete-event replay.
 
 \begin{table}[H]
 \centering
 \small
-\caption{Final ESP32 pin map.}
-\begin{tabularx}{\textwidth}{@{}lllX@{}}
+\caption{Data used in the study.}
+\label{tab:data}
+\begin{tabularx}{\textwidth}{@{}p{0.24\textwidth}p{0.20\textwidth}X@{}}
 \toprule
-ESP32 pin & Direction & Connection & Reason \\
+Source & Content & Use \\
 \midrule
-GPIO21 & Bidirectional & MPU-6050 SDA & Default I\textsuperscript{2}C data; 3.3 V pull-ups \\
-GPIO22 & Output & MPU-6050 SCL & 400 kHz clock \\
-GPIO26 & Output & 220 $\Omega$ plus red LED & Local visual alarm \\
-GPIO25 & Output & 1 k$\Omega$ to 2N2222 base & Isolates buzzer current from GPIO \\
-GPIO27 & Input, pull-up & Button to ground & Active-low cancel with no floating input \\
-GPIO34 & Input only, ADC1 & 100 k$\Omega$/100 k$\Omega$ divider & Battery reading remains available while Wi-Fi uses ADC2 resources \\
-3V3 & Power & GY-521 VCC & Prevents 5 V I\textsuperscript{2}C pull-ups \\
-VIN/5V & Power & MT3608 5.0 V output & Adequate headroom for DevKit regulator \\
+HealthLINK & 41 human IMU recordings & Base-paper archive audit only \\
+Public PTW dataset & Four falls and seven critical manoeuvres at 1 kHz &
+Independent impact and rotation sanity check \\
+CrashGuard generator & 675 events, 675,000 six-axis samples at 100 Hz & Exact
+event-level replay of all three decision methods \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\begin{table}[H]
-\centering
-\small
-\caption{Physical prototype bill of materials and critical selection rules.}
-\begin{tabularx}{\textwidth}{@{}p{0.25\textwidth}cX@{}}
-\toprule
-Part & Qty. & Required rating or function \\
-\midrule
-ESP32 DevKit V1, ESP32-WROOM-32 & 1 & 5 V VIN, 3.3 V GPIO, Wi-Fi station \\
-GY-521 MPU-6050 module & 1 & Six-axis IMU, powered at 3.3 V \\
-Protected 18650 cell & 1 & 2600 mAh from a traceable vendor; never use an unprotected salvaged cell \\
-TP4056 plus DW01A module & 1 & Single-cell charging and protection; charge with load switched off \\
-MT3608 boost module & 1 & Adjust and verify 5.0 V before connecting ESP32 \\
-5 V passive piezo transducer & 1 & At most 30 mA, driven at 2.4 kHz \\
-2N2222 NPN transistor & 1 & Low-side sounder driver \\
-Red LED and momentary button & 1 each & Visual alarm and active-low CANCEL input \\
-Resistors & 5 & 220 $\Omega$, 1 k$\Omega$, 10 k$\Omega$, and two 100 k$\Omega$ \\
-Capacitors & 3 & 100 $\mu$F bulk and two 100 nF local/ADC capacitors \\
-Master switch, insulated enclosure, mount & 1 each & Load isolation, strain relief, and fixed handlebar orientation \\
-\bottomrule
-\end{tabularx}
-\end{table}
+The generated set uses seed \SimulationSeed{} and nine groups of 75 events:
+normal riding, pothole, speed breaker, hard brake, sharp turn, parked
+tip-over, impact with recovery, low-side crash, and high-side crash. Only the
+last two are positive. Attitude trajectories produce body-frame gravity;
+linear pulses model road and impact effects; angular rates come from attitude
+derivatives. Bias and sample noise are added before clipping to the selected
+sensor ranges. This improves realism over arbitrary threshold crossings, but
+it remains a model developed alongside the detector.
 
-No display was proposed or added: local status is conveyed by LED and sound,
-while event history appears in Blynk. Adding a display solely to satisfy a
-generic checklist would increase load and weather sealing complexity without
-serving the approved architecture.
-
-The MPU-6050 is configured to $\pm16g$ and
-$\pm2000\degree\,\mathrm{s}^{-1}$ so impact and rapid rotation do not
-immediately saturate the narrower default ranges~\cite{mpu6050datasheet}.
-The 100 nF sensor capacitor and 100 $\mu$F rail capacitor reduce local supply
-transients. GPIO34 is input-only, which is appropriate for the divider, and
-its ADC1 assignment avoids the ESP32 ADC2 and Wi-Fi conflict documented for
-the platform~\cite{esp32datasheet}.
-
-The audible part is a 5 V passive piezo transducer rated at no more than
-30 mA. GPIO25 supplies a 2.4 kHz waveform through a 1 k$\Omega$ base resistor;
-the 2N2222 switches transducer current and a 10 k$\Omega$ resistor keeps it
-off during boot. A magnetic sounder would require a flyback diode and is not
-interchangeable with the specified piezo part.
-
-The TP4056/DW01A module is a charger with cell protection, not a true power
-path. The specified circuit must be switched off while charging. A future
-simultaneous charge-and-run version must replace it with a load-sharing power
-path charger. This corrects a common but unsafe schematic shortcut.
-
-\subsection{Analytic power budget, not a measurement}
-
-An engineering estimate uses a 5 V average rail current of about 120 mA in
-connected standby. Thus $P_{5V}\approx0.60$ W. At 3.7 V and assumed 90\%
-boost efficiency,
+For acceleration $\mathbf a_k$ and angular rate $\boldsymbol\omega_k$ at
+sample $k$, the main features are
 \begin{equation}
- I_{cell}\approx\frac{0.60}{3.7(0.90)}=0.180\ \mathrm{A}.
+ A_k=\|\mathbf a_k\|,\qquad
+ \Omega_k=\|\boldsymbol\omega_k\|,
 \end{equation}
-If 90\% of a 2600 mAh cell is usable, the idealized runtime is
-$2.34/0.180\approx13$ h. ESP32 radio duty cycle, converter efficiency,
-cell age, temperature, alarm duty, and regulator loss can shift this result
-substantially. It is a sizing calculation awaiting a logged discharge test.
-
-\section{Datasets, provenance, and processing}
-\label{sec:data}
-
-\subsection{Dataset inventory}
-
-\begin{table}[H]
-\centering
-\small
-\caption{Data used or audited in this review.}
-\begin{tabularx}{\textwidth}{@{}p{0.20\textwidth}p{0.14\textwidth}p{0.18\textwidth}X@{}}
-\toprule
-Dataset & Size used & Inputs and format & Role and target \\
-\midrule
-HealthLINK archive~\cite{healthlinkarchive} & 123,821,562-byte ZIP; 41 raw
-recording files & Six-axis human IMU CSV/XLSX, source sampling described as
-50 Hz & Base-paper provenance audit only; no reproducible window label/split
-manifest found \\
-Boubezoul PTW~\cite{boubezoul2019dataset} & 11 recordings: four falls,
-seven manoeuvres & Time, three accelerations in $\mathrm{m/s^2}$, three
-angular rates in degree/s; tab-separated CSV at 1 kHz & Independent feature
-sanity check; target is fall versus critical manoeuvre \\
-CrashGuard simulated & \SimulationEvents{} events,
-\SimulationSamples{} rows & Event ID, binary label, scenario, time, six IMU
-channels; gzip CSV at 100 Hz & Exact firmware replay; 150 fall-like positive
-and 525 non-crash negative events \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-The external 1 kHz PTW channels are resampled to 100 Hz with a polyphase
-anti-alias filter before feature extraction. The four fall time stamps are
-taken from the dataset article; a three-second interval centered on each is
-analysed. Complete manoeuvre recordings are retained as negatives. The
-published sensor ranges are narrower than the MPU-6050 configuration, and
-the acceleration appears unsuitable as a persistent raw gravity reference.
-For that reason the external audit tests only impact and rotation gates, not
-the complete tilted-rest state machine.
-
-\subsection{Physics-informed generated dataset}
-
-Each event lasts 10 s and uses seed \SimulationSeed. The generator constructs
-roll $\phi(t)$, pitch $\theta(t)$, yaw $\psi(t)$, body-frame gravity, linear
-manoeuvre pulses, sensor bias, and Gaussian noise. With roll and pitch, the
-ideal gravity vector in sensor coordinates is
-\begin{equation}
- \mathbf{g}_b(t)=
- \begin{bmatrix}
- -\sin\theta(t)\\
- \sin\phi(t)\cos\theta(t)\\
- \cos\phi(t)\cos\theta(t)
- \end{bmatrix}.
-\end{equation}
-Linear components are added for potholes, bumps, braking, turning, impact,
-vertical unloading, and post-impact ringing. Angular rates are numerical
-derivatives of the attitude trajectories. Finally, a per-event bias and
-sample noise are added and values are clipped to $\pm16g$ and
-$\pm2000\degree/\mathrm{s}$. This is more realistic than arbitrary threshold
-crossings, but it is still a model whose assumptions may favor the proposed
-logic.
-
-Nine balanced-within-scenario groups contain 75 events each: normal riding,
-pothole, speed breaker, hard brake, sharp turn, parked tip-over, impact then
-recovery, low-side crash, and high-side crash. Only the last two are positive.
-There is no training set because no statistical model is fitted. Parameters
-are read directly from the C++ header, and the evaluation script does not
-optimize them. Nevertheless, threshold selection and simulator development
-occurred in the same project, so the resulting scores are an exploratory
-robustness check, not an independent generalization estimate.
-
-The gzip timestamp is fixed to zero and its embedded filename is empty. The
-compressed file is therefore byte-reproducible, not merely value-reproducible.
-SHA-256 provenance can be checked with:
-\begin{lstlisting}[language=bash,numbers=none]
-sha256sum -c data/manifest.sha256
-\end{lstlisting}
-
-\section{Mathematical decision model}
-\label{sec:model}
-
-For raw signed values $r_a,r_\omega$ under the selected full-scale ranges,
-firmware conversion is
-\begin{equation}
- a_i=\frac{r_{a,i}}{2048}\ g,\qquad
- \omega_i=\frac{r_{\omega,i}}{16.4}\ \degree/\mathrm{s}.
-\end{equation}
-At each 10 ms sample, resultant acceleration and angular rate are
-\begin{equation}
- A_k=\sqrt{a_x^2+a_y^2+a_z^2},\qquad
- \Omega_k=\sqrt{\omega_x^2+\omega_y^2+\omega_z^2}.
-\end{equation}
-During a stationary two-second startup calibration, 200 samples establish
-the reference gravity vector $\mathbf{r}$. Calibration is rejected unless
-$0.85\leq\|\mathbf{r}\|\leq1.15g$ and gyroscope RMS is at most
-$5\degree/\mathrm{s}$. Tilt relative to the installed upright pose is
+and tilt relative to the stationary startup gravity reference $\mathbf r$ is
 \begin{equation}
  \Theta_k=\cos^{-1}\!\left(
- \operatorname{clip}\frac{\mathbf{a}_k\cdot\mathbf{r}}
- {\|\mathbf{a}_k\|\|\mathbf{r}\|},-1,1\right).
+ \operatorname{clip}\frac{\mathbf a_k\cdot\mathbf r}
+ {\|\mathbf a_k\|\|\mathbf r\|},-1,1\right).
 \end{equation}
 
-\subsection{Activity gate}
-
-A parked motorcycle can be knocked over and should not automatically generate
-a remote alert. Define sample activity as
-\begin{equation}
- U_k=[|A_k-1|\geq0.08]\lor[\Omega_k\geq4].
-\end{equation}
-A leaky evidence accumulator increases by $\Delta t$ when $U_k$ is true and
-decays by $\Delta t/2$ otherwise, clipped to $[0,1000]$ ms. Reaching 1000 ms
-qualifies a ride and opens a 5000 ms rolling activity memory. This heuristic
-does not prove that the engine is running; it only prevents a single isolated
-parked tip from qualifying itself.
-
-\subsection{State rules}
-
-The parameter values below are compiled into both firmware and replay code.
+CrashGuard first requires recent ride-like activity. It then opens a
+candidate when acceleration is at least 2.0 g or at most 0.35 g. Rotation of
+at least 90 $\degree$/s may occur up to 750 ms before or after this event.
+The candidate is confirmed only if tilt reaches 55$\degree$ while acceleration
+remains between 0.70 and 1.30 g and angular rate stays below 30 $\degree$/s
+continuously for 2 s. Failure to establish rest within 6 s rejects the event.
+These rules are summarized in Table~\ref{tab:parameters}.
 
 \begin{table}[H]
 \centering
 \small
 \caption{CrashGuard v2 decision parameters.}
+\label{tab:parameters}
 \begin{tabular}{@{}lll@{}}
 \toprule
-Parameter & Value & Meaning \\
+Quantity & Value & Purpose \\
 \midrule
-$A_H$ & \VTwoImpactThreshold{} g & High-impact threshold \\
-$A_L$ & \VTwoLowImpactThreshold{} g & Unloading or near-free-fall threshold \\
-$\Omega_T$ & \VTwoRotationThreshold{} $\degree$/s & Rotation threshold \\
-$\Theta_T$ & \VTwoTiltThreshold{}$\degree$ & Final tilt threshold \\
-$[A_{R,L},A_{R,H}]$ & $[0.70,1.30]$ g & Rest acceleration band \\
-$\Omega_R$ & 30 $\degree$/s & Maximum angular rate at rest \\
-$T_C$ & \VTwoCorrelationMs{} ms & Impact-rotation correlation window \\
-$T_R$ & \VTwoRestHoldMs{} ms & Continuous tilted-rest hold \\
-$T_V$ & 6000 ms & Candidate verification timeout \\
-$T_X$ & 15000 ms & Rider cancel interval \\
+Acceleration candidate & $A\geq2.0g$ or $A\leq0.35g$ & Impact or unloading \\
+Rotation & $\Omega\geq90\degree$/s & Fall-like angular motion \\
+Correlation interval & 750 ms & Allows either temporal order \\
+Tilt & $\Theta\geq55\degree$ & Vehicle no longer upright \\
+Rest & $0.70\leq A\leq1.30g$, $\Omega\leq30\degree$/s & Stable final pose \\
+Rest duration & 2000 ms & Rejects short disturbances \\
+Cancel interval & 15000 ms & Gives the rider time to stop alerting \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-For an activity-qualified sample, an impact candidate is
-\begin{equation}
- H_k=[A_k\geq A_H]\lor[A_k\leq A_L].
-\end{equation}
-Rotation may precede or follow impact. The detector accepts the pair when
-$H_k$ occurs within $T_C$ of a previous $\Omega\geq\Omega_T$, or a qualifying
-rotation occurs within $T_C$ after $H_k$. This symmetric correlation corrects
-the Review-1 assumption that impact must always arrive first.
+The comparison uses: (1) acceleration at or above 2 g alone, (2) the Review-1
+ordered rule requiring 4 g, then 200 $\degree$/s, then three seconds of rest,
+and (3) CrashGuard v2. No method is trained or fitted on the event labels.
 
-The final evidence is continuous tilted rest:
-\begin{equation}
- R_k=[\Theta_k\geq\Theta_T]\land
- [0.70\leq A_k\leq1.30]\land[\Omega_k\leq30].
-\end{equation}
-Only if $R_k$ remains true for $T_R$ does the system enter the countdown.
-Failure to establish rest by $T_V$ rejects the candidate. Countdown expiry
-produces one remote-event attempt; pressing CANCEL returns to idle. All time
-subtractions use unsigned wraparound-safe arithmetic.
+\section{Implementation and Wokwi validation}
 
-\section{Baseline, original method, and proposed algorithm}
-\label{sec:algorithms}
+The production firmware directly configures and reads the MPU-6050, samples
+at 100 Hz, calibrates bias and upright gravity, applies the state machine,
+handles the active-low cancel button, and drives the alarms. The same portable
+C++ decision logic is used for native dataset replay, avoiding disagreement
+between the reported algorithm and deployed code. Native tests cover rotation
+before impact, pothole rejection, parked tip rejection, and cancellation.
 
-The comparison deliberately includes both a weak baseline and the actual
-Review-1 proposal.
+Compilation with ESP32 Arduino core 3.3.11 succeeds using 392,947 bytes of
+flash (29\%) and 29,808 bytes of statically allocated RAM (9\%). These values
+show build feasibility only; stack peaks, timing jitter, energy use, and
+long-duration stability still require physical measurement.
 
-\begin{description}[style=nextline,leftmargin=2em,labelindent=0pt]
-  \item[Acceleration-only baseline:] classify an event positive if any
-        $A_k\geq2g$. It is fast and sensitive but ignores context.
-  \item[Review-1 ordered logic:] require $A_k\geq4g$, then
-        $\Omega_k\geq200\degree/\mathrm{s}$ within 500 ms, then
-        $\Theta_k\geq60\degree$ with $0.7\leq A_k\leq1.3g$ for 3 s.
-  \item[CrashGuard v2:] activity gating, high or low acceleration,
-        symmetric temporal correlation with rotation, calibrated 3D tilt,
-        two-second rest verification, and local cancellation.
-\end{description}
+The Wokwi circuit contains an ESP32-DevKitC V4 virtual board, MPU-6050, LED,
+piezo, button, and battery-sense potentiometer. It uses the same GPIO numbers
+as the intended ESP32 DevKit V1 hardware. UART is connected explicitly so the
+test runner can observe firmware events. Wokwi sensor controls apply values in
+g and degree/s~\cite{wokwidiagram,wokwimpu,wokwiscenarios}.
 
-\begin{lstlisting}[caption={Executable-level pseudocode for CrashGuard v2.},label={lst:pseudo}]
-sample MPU6050 at 100 Hz
-compute acceleration magnitude, angular-rate magnitude, and calibrated tilt
-update leaky ride-activity evidence
-
-IDLE:
-  if ride memory is active and (A >= 2.0 g or A <= 0.35 g):
-    open candidate
-    if rotation >= 90 deg/s occurred in the previous 750 ms:
-      go to VERIFY_REST
-    else:
-      go to CORRELATE
-CORRELATE:
-  if rotation >= 90 deg/s within 750 ms: go to VERIFY_REST
-  else if 750 ms expires: reject and return to IDLE
-VERIFY_REST:
-  require tilt >= 55 deg, 0.70 <= A <= 1.30 g,
-          and rotation <= 30 deg/s continuously for 2000 ms
-  if satisfied: sound local alarm and start 15000 ms countdown
-  if 6000 ms candidate timeout expires: reject
-COUNTDOWN:
-  if CANCEL is pressed: silence and return to IDLE
-  if countdown expires: send one Blynk event and enter ALERT_SENT
-\end{lstlisting}
-
-\section{Implementation and software verification}
-\label{sec:software}
-
-\code{wokwi/sketch.ino} is production-oriented code. It configures the
-MPU-6050 registers directly, uses 400 kHz I\textsuperscript{2}C, maintains a
-100 Hz deadline, calibrates gyroscope bias and gravity reference, debounces an
-active-low button edge, drives the local alarm, reads the protected-cell
-divider, and optionally calls Blynk over HTTPS. It has no conditional branch
-that injects synthetic sensor values.
-
-The decision implementation lives in \code{wokwi/crash\_detector.h} and has
-no Arduino dependency. \code{analysis/detector\_replay.cpp} includes that
-same header, ensuring that reported v2 decisions are made by the deployment
-logic rather than a Python reimplementation. Four native unit tests cover
-rotation before impact, pothole rejection, parked tip rejection, and cancel.
-The complete pipeline compiles the tests with warnings as errors, runs them,
-generates the dataset, streams the gzip CSV through the C++ replay program,
-calculates metrics, audits external data, and renders the PDF figures.
-
-An ESP32 Arduino core 3.3.11 target compile with all compiler warnings enabled
-succeeds. The offline firmware image uses 392,947 bytes, or 29\% of the
-1,310,720-byte application partition, and statically allocated globals use
-29,808 bytes, or 9\% of 327,680 bytes. These compiler figures establish build
-feasibility but do not measure maximum stack, heap fragmentation, timing, or
-energy on a running board. Arduino CLI requires the primary \code{.ino} name
-to match its directory, so a four-line adapter under
-\code{wokwi/arduino-build/sketch/} includes the root Wokwi
-\code{sketch.ino}; it does not duplicate firmware logic.
-
-Cloud credentials are held in an optional untracked \code{secrets.h}. The
-offline build remains fully functional. Failed Wi-Fi or HTTPS delivery does
-not block sampling. A production revision should add a persistent outbound
-queue, delivery acknowledgement, TLS trust-store policy, watchdog recovery,
-and rate limiting.
-
-\section{Wokwi simulation}
-\label{sec:wokwi}
-
-Wokwi requires the filename \code{diagram.json}; the commonly mistyped
-\code{daigram.json} will not be discovered. The supplied diagram contains an
-ESP32-DevKitC V4 virtual target, MPU-6050, LED and resistor, buzzer, button,
-and a potentiometer that emulates the battery divider. The production target
-remains the ESP32 DevKit V1; the virtual board exposes the same GPIOs used by
-the design. Its pin map matches
-\Cref{tab:trace,fig:circuit}. Wokwi's MPU control values are in g and
-degree/s, so scenario values map directly to firmware units
-~\cite{wokwimpu}. The official diagram and automation formats are used
-~\cite{wokwidiagram,wokwiscenarios}.
+All three authenticated scenarios passed with Wokwi CLI 0.26.1 and Simulation
+API 1.0.0-20260825-g9f67b160. The firmware contained no hotspot or Blynk
+credentials, so the alert result verifies the alert-due path, not Internet
+delivery.
 
 \begin{table}[H]
 \centering
 \small
-\caption{Automated Wokwi scenarios and acceptance criteria.}
-\begin{tabularx}{\textwidth}{@{}p{0.22\textwidth}Xp{0.25\textwidth}@{}}
+\caption{Wokwi virtual-hardware results.}
+\begin{tabularx}{\textwidth}{@{}p{0.18\textwidth}p{0.16\textwidth}X@{}}
 \toprule
-Scenario & Stimulus & Required observation \\
+Scenario & Result & Acceptance evidence \\
 \midrule
-Crash & Qualifying motion, 240 $\degree$/s rotation, 5 g impact, then a
-tilted 1 g rest pose & \code{CRASH\_CONFIRMED}, followed after 15 s by
-\code{ALERT\_SENT} \\
-Pothole & Qualifying motion and 5 g pulse without rotation &
-\code{CANDIDATE\_REJECTED}; GPIO26 remains low \\
-Cancel & Same fall signature, then active-low cancel press during countdown
-& \code{ALERT\_CANCELLED}; GPIO26 stays low beyond the original alert
-deadline, and \code{ALERT\_SENT} is absent \\
+Crash & Pass & Impact, rotation, tilted rest, local alarm, and alert-due event
+after the 15 s countdown \\
+Pothole & Pass & Candidate rejected and alarm GPIO remained low \\
+Cancel & Pass & Alert cancelled; alarm GPIO low immediately and after a 16 s
+guard; no later alert-due event \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-The Wokwi diagram was linted with Wokwi CLI 0.26.1 with no errors. Its only
-informational result says the \path{board-esp32-devkit-c-v4} identifier is
-undocumented by the linter registry. On 28 August 2026, all three scenarios
-passed against Wokwi Simulation API
-\path{1.0.0-20260825-g9f67b160}. The crash run observed
-\path{CRASH_CONFIRMED} and \path{ALERT_SENT}; the pothole run observed
-\path{CANDIDATE_REJECTED} with GPIO26 low; and the cancellation run kept
-GPIO26 low through a 16 s post-cancellation guard while treating any
-\path{ALERT_SENT} as failure. One cancellation attempt was repeated after
-the cloud transport closed with code 1006 before simulator startup. The
-passing run then completed every scenario step.
+\section{Results and interpretation}
 
-The offline firmware deliberately contained no hotspot or Blynk secrets, so
-\path{ALERT_SENT cloud_delivery=not_available} validates the alert-due
-control path rather than network delivery. Wokwi also does not model cell
-chemistry, TP4056 charging behavior, boost-converter efficiency, mechanical
-mounting, waterproofing, or real vibration. The structured validation record
-and firmware hashes are in \path{results/wokwi_validation.json}.
-
-\section{Results}
-\label{sec:results}
-
-\subsection{Wokwi firmware-in-the-loop acceptance}
-
-The three executable scenarios passed with the production firmware binary;
-no simulation-only sensor branch was compiled. These tests cover state
-transitions and GPIO behavior under prescribed inputs, not crash-detection
-accuracy or network reliability. The exact observations are summarized in
-\Cref{tab:wokwi-results}.
+Table~\ref{tab:metrics} and Figure~\ref{fig:performance} report event-level
+results on 150 positive and 525 negative generated events. The
+acceleration-only baseline is sensitive but produces 289 false positives. The
+Review-1 rule avoids false positives but misses 111 of 150 simulated crashes.
+V2 recovers 75 of those misses without adding a false positive in this set.
 
 \begin{table}[H]
 \centering
 \small
-\caption{Authenticated Wokwi cloud-simulation results.}
-\label{tab:wokwi-results}
-\begin{tabularx}{\textwidth}{@{}p{0.18\textwidth}p{0.14\textwidth}X@{}}
-\toprule
-Scenario & Result & Observed acceptance evidence \\
-\midrule
-Crash & Pass & Ride activity, rotation confirmation, crash confirmation,
-and alert-due event after the 15 s countdown \\
-Pothole & Pass & Candidate rejection and GPIO26 low \\
-Cancel & Pass & Crash confirmation, cancellation, GPIO26 low immediately
-and after 16 s, with no alert-due event \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-\subsection{Deterministic event replay}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.86\textwidth]{figures/performance_comparison.pdf}
-\caption{Event-level sensitivity and specificity with Wilson 95\% intervals.
-Intervals quantify finite simulation-event counts, not real-world uncertainty.}
-\label{fig:performance}
-\end{figure}
-
-\begin{table}[H]
-\centering
-\small
-\caption{Event-level replay on 150 positive and 525 negative simulated
-events. Median delay is from the method's first candidate to confirmation.}
+\caption{Deterministic replay results.}
 \label{tab:metrics}
 \begin{tabular}{@{}lrrrrrrr@{}}
 \toprule
@@ -756,183 +352,92 @@ CrashGuard v2 & \VTwoTP{} & \VTwoTN{} & \VTwoFP{} & \VTwoFN{} & \VTwoSensitivity
 \end{tabular}
 \end{table}
 
-CrashGuard v2 sensitivity has Wilson 95\% interval
-[\VTwoSensitivityLow{}, \VTwoSensitivityHigh{}]. With zero observed false
-positives among 525 negatives, specificity is 100\%, but its lower Wilson
-bound is only \VTwoSpecificityLow{}. Therefore ``zero in this run'' is not
-equivalent to ``false alarms are impossible''. The median v2 confirmation
-delay is \VTwoConfirmationDelayMs{} ms, close to the explicit two-second
-rest requirement. Review-1 median confirmation delay is
-\LegacyConfirmationDelayMs{} ms because of its three-second rest hold.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth]{figures/performance_comparison.pdf}
+\caption{Sensitivity and specificity with Wilson 95\% intervals. Intervals
+describe finite simulated event counts, not road uncertainty.}
+\label{fig:performance}
+\end{figure}
 
-The acceleration-only rule demonstrates the expected tradeoff: high
-sensitivity but 289 false triggers, mostly high-dynamic road events. The
-Review-1 rule has no false positives but misses 111 of 150 simulated crashes.
-V2 recovers 75 of those missed positives without adding a false positive in
-this generated set. All 75 high-side events are detected; 39 of 75 lower
-dynamic low-side events are detected. These 36 low-side misses are the main
-known failure mode and make the original 90\% detection objective unmet at
-this evidence stage.
+The v2 sensitivity interval is [\VTwoSensitivityLow{},
+\VTwoSensitivityHigh{}]. Its observed specificity is 100\%, but the lower
+Wilson bound is \VTwoSpecificityLow{}; zero false positives in 525 generated
+events does not prove that false alarms are impossible. Median confirmation
+delay is \VTwoConfirmationDelayMs{} ms, which reflects the required two-
+second stable-rest interval. All 75 high-side events were detected, while 36
+of 75 lower-dynamic low-side events were missed. This is the main simulated
+failure mode.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{figures/simulated_profiles.pdf}
-\caption{One reproducible example each of pothole, parked tip-over, and
-low-side crash. Dashed lines are v2 thresholds. A threshold crossing alone
-does not decide the class.}
+\includegraphics[width=0.92\textwidth]{figures/simulated_profiles.pdf}
+\caption{Example pothole, parked tip-over, and low-side crash profiles. A
+threshold crossing alone does not determine the output.}
 \label{fig:profiles}
 \end{figure}
 
-\subsection{Independent PTW feature audit}
+The independent PTW audit supports lowering the original thresholds. None of
+the four published fall intervals reached 4 g or 200 $\degree$/s, whereas all
+four passed the v2 high-or-low acceleration gate and all four passed its
+90 $\degree$/s rotation gate. Several non-fall manoeuvres also cross an
+individual v2 gate, confirming why temporal correlation and final-rest
+evidence are necessary. The external archive does not provide a reliable
+gravity reference for reproducing the full state machine, so it is not
+reported as a complete v2 accuracy test.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.93\textwidth]{figures/external_ptw_features.pdf}
-\caption{Peak features after anti-aliased resampling of the public PTW data.
-Red bars are the four published fall intervals; blue bars are seven extreme
-manoeuvre recordings.}
+\includegraphics[width=0.78\textwidth]{figures/external_ptw_features.pdf}
+\caption{Peak acceleration and angular rate in four PTW falls and seven
+critical manoeuvre recordings after resampling to 100 Hz.}
 \label{fig:external}
 \end{figure}
 
-None of the four external fall intervals reaches the Review-1 4 g impact or
-200 $\degree$/s rotation thresholds: \ExternalFourGPass{}/4 and
-\ExternalTwoHundredPass{}/4 pass, respectively. In contrast,
-\ExternalVTwoImpactPass{}/4 pass the v2 high-or-low acceleration gate and
-\ExternalVTwoRotationPass{}/4 pass its 90 $\degree$/s rotation gate. This is
-evidence that the original thresholds were not portable to the closest public
-data. It is not a full v2 accuracy result because the archive's acceleration
-representation does not support the firmware's calibrated gravity and rest
-test. Several non-fall manoeuvres also cross one v2 gate, which reinforces the
-need for temporal and rest evidence rather than proving the final classifier.
+\section{Limitations and safety}
 
-\section{Validity, safety, privacy, and limitations}
+The following limitations define the valid scope of the results:
 
-\begin{enumerate}
-  \item \textbf{Simulation-to-road gap.} Generated trajectories omit frame
-        flex, mounting slip, engine harmonics, impacts at varied locations,
-        temperature drift, sensor clipping details, and rider-vehicle
-        separation. Scores cannot be promoted as field accuracy.
-  \item \textbf{Dataset dependence.} The external PTW set has only four
-        controlled falls. HealthLINK has the wrong sensing domain, and its
-        paper-level processing could not be exactly reconstructed.
-  \item \textbf{Threshold development bias.} The simulation generator and
-        detector were developed in the same project. No blinded physical
-        holdout has been evaluated.
-  \item \textbf{No measured non-detection exposure.} Event specificity is
-        not a false-alert rate per hour or kilometre. A road exposure study is
-        required for the operational objective.
-  \item \textbf{Communication.} A hotspot may be disabled, out of coverage,
-        or disconnected. HTTPS success is not emergency-contact receipt.
-  \item \textbf{Location and privacy.} No coordinates are fabricated. Adding
-        GNSS or a companion application creates consent, retention, and access
-        control requirements.
-  \item \textbf{Safety.} Intentional public-road crash tests are prohibited.
-        Future controlled tip-over work must use an unmanned frame, remote
-        release, soft containment, cell protection, and responsible lab
-        supervision.
-\end{enumerate}
+\begin{itemize}
+  \item The generated signals omit frame flex, mounting slip, engine
+        harmonics, varied impact locations, weather, sensor drift, and rider-
+        vehicle separation.
+  \item The external PTW set contains only four controlled falls, while the
+        human dataset has the wrong sensing domain.
+  \item The generator and thresholds were developed in the same project; no
+        blinded physical holdout has been evaluated.
+  \item Event specificity is not a false-alert rate per hour or kilometre.
+  \item Wokwi does not validate the cell, charger, boost converter, mounting,
+        piezo loudness, Wi-Fi coverage, HTTPS delivery, or Blynk receipt.
+  \item The prototype is not a certified automotive, medical, or emergency
+        device. Intentional public-road crash testing would be unsafe.
+\end{itemize}
 
-This prototype is not a certified emergency, medical, or automotive safety
-device. A false negative may prevent an alert and a false positive may alarm
-contacts. The local cancel interval is a usability control, not a guarantee.
+Future validation should proceed in stages: bench-check voltages, sensor
+orientation, sounder current, sampling jitter, and charge isolation; collect
+unmanned stationary tip-overs and suspended-frame drops into soft
+containment; then log ordinary riding over potholes, braking, turns, weather,
+and mounting variations. Thresholds should be frozen before a held-out route,
+and operational results should include false alerts per hour and kilometre.
 
-\section{Experiment reproduction and verification}
+\section{Conclusion}
 
-Clone the public repository with GitHub CLI, then run every command from its
-root. The \code{sudo} command uses Void Linux package names:
+CrashGuard demonstrates that a compact ESP32 state machine can combine
+impact, rotation, tilt, rest, and rider cancellation without requiring a
+large learned model. In deterministic simulation, v2 substantially improves
+on the original ordered rule and avoids the acceleration-only baseline's
+large false-positive count. The closest public motorcycle recordings also
+show that the original 4 g and 200 $\degree$/s thresholds are not portable.
+The firmware builds successfully and all three Wokwi scenarios pass.
 
-\begin{lstlisting}[language=bash,numbers=none]
-gh repo clone qwerty-dvorak/crashguard-iot
-cd crashguard-iot
+The main unresolved issue is evidence quality: v2 still misses 36 simulated
+low-side events and has not been evaluated on physical target-domain data.
+The correct next step is controlled bench and ordinary-riding data
+collection, not stronger performance claims.
 
-sudo xbps-install -S base-devel python3 python3-pip arduino-cli curl unzip \
-  texlive texlive-most texlive-latexmk
-
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install -r analysis/requirements.txt
-sh data/download_datasets.sh
-./analysis/run_all.sh
-sha256sum -c data/manifest.sha256
-
-arduino-cli config add board_manager.additional_urls \
-  https://espressif.github.io/arduino-esp32/package_esp32_index.json
-arduino-cli core update-index
-arduino-cli core install esp32:esp32@3.3.11
-(cd wokwi && arduino-cli compile --fqbn esp32:esp32:esp32 \
-  --build-path build arduino-build/sketch)
-
-latexmk -pdf report.tex
-\end{lstlisting}
-
-To lint and run all Wokwi scenarios after obtaining a CI token:
-
-\begin{lstlisting}[language=bash,numbers=none]
-curl -L https://wokwi.com/ci/install.sh | sh
-export PATH="$HOME/bin:$PATH"
-(cd wokwi && wokwi-cli lint .)
-export WOKWI_CLI_TOKEN='wok_replace_with_your_token'
-./wokwi/run-tests.sh
-\end{lstlisting}
-
-\section{Conclusion and next validation stage}
-
-The implementation satisfies the Review-2 deliverables at simulation level
-and exposes rather than hides what remains unknown. The original 4 g,
-200 $\degree$/s ordered method does not survive the public PTW audit and has
-only \LegacySensitivity{} sensitivity on generated events. The proposed
-activity-gated symmetric state machine raises simulated sensitivity to
-\VTwoSensitivity{}, keeps zero observed false positives in 525 generated
-negative events, and uses the exact code deployed in the ESP32 sketch. It
-still misses 36 lower-dynamic events and has no road-valid accuracy claim.
-
-The next valid experiment is staged, not a real crash. First, verify rail
-voltages, sensor orientation, buzzer transistor current, charge-only
-interlock, and sampling jitter on the bench. Second, collect labelled
-stationary tip-overs and suspended-frame drops onto a soft mat. Third, log at
-least 300 km of ordinary riding across potholes, bumps, braking, turns, and
-mounting variations. Freeze thresholds before a held-out route, report alerts
-per hour and per kilometre with confidence bounds, and compare against a
-small interpretable ML model only after that target-domain dataset exists.
-
-\appendix
-
-\section{Repository map}
-
-\begin{longtable}{@{}p{0.36\textwidth}p{0.59\textwidth}@{}}
-\toprule
-Path & Purpose \\
-\midrule
-\endhead
-\code{report.tex}, \code{references.bib} & This paper and its bibliography \\
-\code{wokwi/sketch.ino} & Production ESP32 firmware \\
-\code{wokwi/crash\_detector.h} & Portable exact state-machine implementation \\
-\code{wokwi/diagram.json} & Wokwi circuit description \\
-\code{wokwi/scenario-*.yaml} & Automated crash, rejection, and cancel stimuli \\
-\code{wokwi/run-tests.sh} & Firmware build, lint, and cloud-scenario runner \\
-\code{analysis/generate\_simulated\_}\\\code{dataset.py} & Deterministic physics-informed generator \\
-\code{analysis/detector\_replay.cpp} & Exact firmware detector replay and baselines \\
-\code{analysis/evaluate.py} & Metrics, Wilson intervals, external audit, and figures \\
-\code{analysis/test\_detector.cpp} & Native state-machine regression tests \\
-\code{data/download\_datasets.sh} & Idempotent source-archive downloader, verifier, and PTW extractor \\
-\code{data/manifest.sha256} & Source and generated archive hashes \\
-\code{results/summary.json} & Machine-readable configuration, metrics, and external features \\
-\code{results/wokwi\_validation.json} & Wokwi versions, firmware hashes, observations, and limitations \\
-\bottomrule
-\end{longtable}
-
-\section{Data manifest}
-
-\lstinputlisting[numbers=none]{data/manifest.sha256}
-
-\section{Firmware excerpt}
-
-The complete source is supplied separately so it can compile directly. The
-following excerpt shows the real sampling path and demonstrates that replay
-values are not injected into firmware.
-
-\lstinputlisting[language=C++,firstline=30,lastline=75]{wokwi/sketch.ino}
-
+\clearpage
+{\small
 \bibliography{references}
+}
 
 \end{document}
