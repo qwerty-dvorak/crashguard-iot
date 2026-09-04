@@ -9,6 +9,8 @@ scripts, and the exact-code replay analysis.
 The main deliverables are:
 
 - [report.pdf](report.pdf): compiled 12-page research report
+- [review3/report.pdf](review3/report.pdf): Assessment 6 Review 3 integration,
+  testing, dashboard, fault-handling, and performance-evaluation report
 - [report.tex](report.tex) and [references.bib](references.bib): editable LaTeX sources
 - [wokwi/sketch.ino](wokwi/sketch.ino): ESP32 firmware for the physical circuit
 - [wokwi/diagram.json](wokwi/diagram.json): Wokwi circuit file, using Wokwi's required spelling

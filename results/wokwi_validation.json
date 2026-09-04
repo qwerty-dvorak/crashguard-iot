@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-08-28T22:58:02+05:30",
+  "updated_at": "2026-09-04T01:09:35+05:30",
   "claim_scope": "Virtual-hardware and compile checks only; no physical-hardware or phone-notification claim",
   "historical_public_run": {
     "status": "passed",
@@ -21,20 +21,29 @@
       "status": "passed",
       "flash_bytes": 392955,
       "static_ram_bytes": 29808,
-      "merged_bin_sha256": "c2f2274a885465882195755acca5dc0676405f829d15debe9ef5a940d9929043",
-      "elf_sha256": "e6f3b10f2460e54b940d3e9dbdba41c93219b74d8dac2526b51045a1cbefb88b"
+      "merged_bin_sha256": "8d30ddb35c6d9200781fbe04c68219d8fe9e20068b3ae86401cbeceb2d9e85d9",
+      "elf_sha256": "2ce29c868ef1052bd3eae9c36a2ba08110a7fe34ae7dbd533a40f04c79e03ddd"
     },
     "blynk_enabled_esp32_compile": {
       "status": "passed with compile-only placeholders and no network request",
       "blynk_library": "1.3.5",
       "transport": "Blynk ESP32 SSL client",
-      "flash_bytes": 1040343,
+      "flash_bytes": 1040295,
       "static_ram_bytes": 49124,
-      "merged_bin_sha256": "f4247fc3a5cde107e8f2a2e069c01a1e06e189f243b1ff52fef5c3339c906631",
-      "elf_sha256": "fc8a936d88e06bfa6b48c1c70c4b7daf79c95c56c1540fb8ab0fb9696d0b648d"
+      "merged_bin_sha256": "f1e5cde2998c243bf36f37239e052a3fcb5b5e77f11dcb972ff8c5562c24ebf9",
+      "elf_sha256": "585333fca6b22fd7fb9c60a770b1071fa49c88e88e035643614eeb7d7e66db78"
     },
-    "current_wokwi_cloud_scenarios": "not rerun to conserve the user's limited Wokwi CI minutes",
-    "blynk_cloud_scenario": "provided but not executed because no Blynk test-device token was supplied"
+    "current_wokwi_cloud_scenarios": {
+      "status": "passed",
+      "executed_at": "2026-09-04T01:09:35+05:30",
+      "execution": "one explicit run of wokwi/run-tests.sh; no automatic CI",
+      "passed": [
+        "crash alert deadline and offline Blynk handoff",
+        "pothole rejection with GPIO26 low",
+        "rider cancellation with GPIO26 low after the 16 second guard"
+      ]
+    },
+    "blynk_cloud_scenario": "provided but not executed because no Blynk test-device credential was configured"
   },
   "expected_current_scenarios": [
     {
@@ -77,7 +86,7 @@
   },
   "limitations": [
     "No physical sensor, actuator, power, enclosure, or mounting behavior was measured.",
-    "No current-source Wokwi cloud execution or Blynk phone receipt is claimed.",
+    "No authenticated Blynk event delivery or phone receipt is claimed.",
     "A submitted Blynk library command is not proof that a phone notification was delivered.",
     "Wokwi sensor controls provide prescribed virtual values rather than a mechanical crash model."
   ]
