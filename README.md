@@ -1,46 +1,23 @@
-# CrashGuard research artifact
+# CrashGuard: motorcycle crash detection and IoT alerts
 
-Public repository: <https://github.com/qwerty-dvorak/crashguard-iot>
+The complete, self-contained research artifact is in [paper/](paper/).
 
-This repository contains the research report, production ESP32 firmware,
-Wokwi circuit and automation scenarios, dataset acquisition and generation
-scripts, and the exact-code replay analysis.
+- [Read the research paper](paper/report.pdf)
+- [LaTeX manuscript](paper/report.tex) and [references](paper/references.bib)
+- [ESP32 firmware and circuit](paper/wokwi/)
+- [Simulation and evaluation scripts](paper/analysis/)
+- [Experimental results and logs](paper/results/)
+- [Dataset provenance and source attribution](paper/data/README.md)
 
-The main deliverables are:
-
-- [report.pdf](report.pdf): compiled 12-page research report
-- [review3/report.pdf](review3/report.pdf): Assessment 6 Review 3 integration,
-  testing, dashboard, fault-handling, and performance-evaluation report
-- [report.tex](report.tex) and [references.bib](references.bib): editable LaTeX sources
-- [wokwi/sketch.ino](wokwi/sketch.ino): ESP32 firmware for the physical circuit
-- [wokwi/diagram.json](wokwi/diagram.json): Wokwi circuit file, using Wokwi's required spelling
-- [Wokwi scenarios](wokwi): crash, pothole rejection, and cancel tests
-- [Wokwi validation record](results/wokwi_validation.json): tool versions, firmware hashes, observations, and limitations
-- [analysis/run_all.sh](analysis/run_all.sh): repeatable data and evaluation pipeline
-- [results/summary.json](results/summary.json): machine-readable metrics and detector parameters
-- [data/manifest.sha256](data/manifest.sha256): hashes for downloaded archives and generated data
-
-No physical-hardware, road-crash, battery-runtime, or network-delivery result
-is claimed. The event metrics come from deterministic dataset replay. The
-three Wokwi tests are virtual-hardware acceptance results. See the research
-integrity statement and limitations in the report before citing any number.
-
-## Reproduce the experiments
+## Reproduce the paper
 
 ```sh
-gh repo clone qwerty-dvorak/crashguard-iot
-cd crashguard-iot
-
-sudo xbps-install -S base-devel python3 python3-pip arduino-cli curl unzip \
-  texlive texlive-most texlive-latexmk
-
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install -r analysis/requirements.txt
-sh data/download_datasets.sh
-./analysis/run_all.sh
-sha256sum -c data/manifest.sha256
-latexmk -pdf report.tex
+git clone https://github.com/qwerty-dvorak/crashguard-iot.git
+cd crashguard-iot/paper
+python3 -m pip install -r analysis/requirements.txt
+sh reproduce.sh
 ```
 
-See the [Wokwi instructions](wokwi/README.md) for firmware and simulator commands.
+A C++17 compiler and LaTeX installation with latexmk are required. The `paper/` directory contains all project inputs needed by the build; its pipeline verifies and extracts the bundled public PTW supplement, generates both simulated motion datasets, runs the firmware scenarios, and compiles the PDF. See [paper/README.md](paper/README.md) for details.
+
+The paper evaluates 945 simulated events, 14 firmware scenarios, 39 DC interface combinations, nine battery-discharge cases, and public motorcycle signal gates. The source code and experimental records distinguish detector performance, local warning behaviour, and the simulated event-service boundary.

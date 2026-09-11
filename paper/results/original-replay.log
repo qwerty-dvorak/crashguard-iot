@@ -1,0 +1,49 @@
+detector tests passed
+generated 675 events at /home/afish/vit/project_1/iot-programming/review2/paper/data/generated/simulated_imu.csv.gz
+{
+  "Acceleration-only comparison": {
+    "tp": 134,
+    "tn": 236,
+    "fp": 289,
+    "fn": 16,
+    "sensitivity": 0.8933333333333333,
+    "specificity": 0.44952380952380955,
+    "precision": 0.31678486997635935,
+    "f1": 0.46771378708551486,
+    "sensitivity_ci_low": 0.8337537774158531,
+    "sensitivity_ci_high": 0.9332696303479265,
+    "specificity_ci_low": 0.40749228529325127,
+    "specificity_ci_high": 0.4922886431570466,
+    "median_confirmation_delay_ms": 0.0
+  },
+  "Strict ordered-threshold comparison": {
+    "tp": 39,
+    "tn": 525,
+    "fp": 0,
+    "fn": 111,
+    "sensitivity": 0.26,
+    "specificity": 1.0,
+    "precision": 1.0,
+    "f1": 0.41269841269841273,
+    "sensitivity_ci_low": 0.19642138912816148,
+    "sensitivity_ci_high": 0.3355643281685153,
+    "specificity_ci_low": 0.9927360861055402,
+    "specificity_ci_high": 1.0000000000000002,
+    "median_confirmation_delay_ms": 3120.0
+  },
+  "CrashGuard": {
+    "tp": 114,
+    "tn": 525,
+    "fp": 0,
+    "fn": 36,
+    "sensitivity": 0.76,
+    "specificity": 1.0,
+    "precision": 1.0,
+    "f1": 0.8636363636363636,
+    "sensitivity_ci_low": 0.6857086062445535,
+    "sensitivity_ci_high": 0.8213068666840467,
+    "specificity_ci_low": 0.9927360861055402,
+    "specificity_ci_high": 1.0000000000000002,
+    "median_confirmation_delay_ms": 2310.0
+  }
+}

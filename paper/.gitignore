@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+analysis/build/
+analysis/firmware_harness
+analysis/firmware_offline
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.out
+*.toc
+report.log
+!results/*.log
+results/latex-build.log
+data/raw/ptw_supplementary/
+# These fixed local service-model values are not credentials.
+# Production account credentials must never be committed.
+wokwi/secrets.h
+.env
+.venv/
+wokwi/build/
+wokwi/arduino/

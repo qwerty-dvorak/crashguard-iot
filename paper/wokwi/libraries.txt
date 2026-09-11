@@ -1,0 +1,2 @@
+# Pinned for repeatable Blynk IoT event delivery on ESP32 and in Wokwi.
+Blynk@1.3.5

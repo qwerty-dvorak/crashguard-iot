@@ -1,0 +1,13 @@
+RIDE_ACTIVE
+WARN sample_deadline_missed
+WARN sample_deadline_missed
+CANDIDATE a=3.00 omega=0.0 tilt=0.0
+ROTATION_CONFIRMED
+STATE VERIFYING_REST
+CRASH_CONFIRMED countdown=15s
+STATE COUNTDOWN
+WARN sample_deadline_missed
+ALERT_DUE
+BLYNK_EVENT_SKIPPED reason=wifi_unavailable
+STATE ALERT_DUE
+RESULT wifi_skipped alarm=1

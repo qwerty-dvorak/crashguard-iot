@@ -1,0 +1,72 @@
+[
+  {
+    "case": "boot_absent",
+    "passed": true,
+    "result": "RESULT safe_stop alarm=0"
+  },
+  {
+    "case": "short_read",
+    "passed": true,
+    "result": "RESULT skipped state=IDLE"
+  },
+  {
+    "case": "bus_error",
+    "passed": true,
+    "result": "RESULT skipped state=IDLE"
+  },
+  {
+    "case": "calibration_motion",
+    "passed": true,
+    "result": "RESULT calibration_rejected"
+  },
+  {
+    "case": "calibration_still",
+    "passed": true,
+    "result": "RESULT calibration_accepted samples=200"
+  },
+  {
+    "case": "battery_adc",
+    "passed": true,
+    "result": "RESULT voltage=3.700"
+  },
+  {
+    "case": "cancel",
+    "passed": true,
+    "result": "RESULT cancelled alarm=0"
+  },
+  {
+    "case": "deadline",
+    "passed": true,
+    "result": "RESULT confirmation_ms=3610 deadline_ms=18610 one_shot=1"
+  },
+  {
+    "case": "sample_gap",
+    "passed": true,
+    "result": "RESULT gap_spans_rest confirmation_ms=3610"
+  },
+  {
+    "case": "wifi_down",
+    "passed": true,
+    "result": "RESULT wifi_skipped alarm=1"
+  },
+  {
+    "case": "cloud_down",
+    "passed": true,
+    "result": "RESULT cloud_skipped blocking_ms=5000 alarm=1"
+  },
+  {
+    "case": "submitted",
+    "passed": true,
+    "result": "RESULT simulated_sink_events=1 description_bytes=143"
+  },
+  {
+    "case": "no_retry",
+    "passed": true,
+    "result": "RESULT recovery_events=0"
+  },
+  {
+    "case": "offline",
+    "passed": true,
+    "result": "RESULT offline_skipped alarm=1"
+  }
+]

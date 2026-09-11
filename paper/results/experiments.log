@@ -1,0 +1,97 @@
+{
+  "fresh": {
+    "Acceleration-only comparison": {
+      "tp": 52,
+      "tn": 102,
+      "fp": 108,
+      "fn": 8,
+      "sensitivity": 0.8666666666666667,
+      "specificity": 0.4857142857142857,
+      "precision": 0.325,
+      "f1": 0.4727272727272728,
+      "sensitivity_ci_low": 0.7583484032350039,
+      "sensitivity_ci_high": 0.9308589051941303,
+      "specificity_ci_low": 0.4189827637032563,
+      "specificity_ci_high": 0.5529590663184374,
+      "median_confirmation_delay_ms": 0.0
+    },
+    "Strict ordered-threshold comparison": {
+      "tp": 13,
+      "tn": 210,
+      "fp": 0,
+      "fn": 47,
+      "sensitivity": 0.21666666666666667,
+      "specificity": 1.0,
+      "precision": 1.0,
+      "f1": 0.3561643835616438,
+      "sensitivity_ci_low": 0.13123044048190308,
+      "sensitivity_ci_high": 0.33620027573194783,
+      "specificity_ci_low": 0.9820359492407167,
+      "specificity_ci_high": 1.0,
+      "median_confirmation_delay_ms": 3120.0
+    },
+    "CrashGuard": {
+      "tp": 43,
+      "tn": 210,
+      "fp": 0,
+      "fn": 17,
+      "sensitivity": 0.7166666666666667,
+      "specificity": 1.0,
+      "precision": 1.0,
+      "f1": 0.8349514563106796,
+      "sensitivity_ci_low": 0.5923271483560882,
+      "sensitivity_ci_high": 0.8149317157156729,
+      "specificity_ci_low": 0.9820359492407167,
+      "specificity_ci_high": 1.0,
+      "median_confirmation_delay_ms": 2330.0
+    }
+  },
+  "tests": 14,
+  "energy": [
+    {
+      "load_ma": 90,
+      "efficiency": 0.8,
+      "runtime_h": 14.976111111111111
+    },
+    {
+      "load_ma": 90,
+      "efficiency": 0.9,
+      "runtime_h": 16.848055555555554
+    },
+    {
+      "load_ma": 90,
+      "efficiency": 0.95,
+      "runtime_h": 17.784166666666668
+    },
+    {
+      "load_ma": 120,
+      "efficiency": 0.8,
+      "runtime_h": 11.232222222222223
+    },
+    {
+      "load_ma": 120,
+      "efficiency": 0.9,
+      "runtime_h": 12.636111111111111
+    },
+    {
+      "load_ma": 120,
+      "efficiency": 0.95,
+      "runtime_h": 13.338055555555556
+    },
+    {
+      "load_ma": 180,
+      "efficiency": 0.8,
+      "runtime_h": 7.4880555555555555
+    },
+    {
+      "load_ma": 180,
+      "efficiency": 0.9,
+      "runtime_h": 8.424166666666666
+    },
+    {
+      "load_ma": 180,
+      "efficiency": 0.95,
+      "runtime_h": 8.892222222222221
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+\begin{circuitikz}[american,scale=.9,transform shape]
+\tikzset{mod/.style={draw,rounded corners,align=center,font=\small,fill=blue!4,minimum height=10mm},lab/.style={font=\scriptsize,fill=white,inner sep=1pt}}
+% Power chain, common labelled supply nets.
+\node[mod,minimum width=28mm] (cell) at (1.5,12.5) {18650 cell\\2600 mAh};
+\node[mod,minimum width=35mm] (charge) at (5.5,12.5) {TP4056 + DW01A\\charge / protect};
+\node[mod,minimum width=28mm] (boost) at (11,12.5) {MT3608\\5 V boost};
+\draw (cell.east)--(charge.west);
+\draw (charge.east) to[spst] (boost.west);
+\node[lab] at (8.2,13.1) {master switch};
+\draw (boost.east)--(14.5,12.5) node[right,lab]{+5V};
+\draw (charge.north)--++(0,.55) node[above,lab]{USB 5 V charging};
+\draw (cell.south)--++(0,-.4) node[ground]{};
+\draw (charge.south)--++(0,-.4) node[ground]{};
+\draw (boost.south)--++(0,-.4) node[ground]{};
+\node[lab,anchor=west] at (0,11.25) {All GND nets common. Master switch open during charging. VBAT = switched protected cell output.};
+% Controller / sensor interface.
+\node[mod,minimum width=30mm,minimum height=24mm] (imu) at (1.8,8.8) {MPU-6050\\GY-521\\0x68};
+\node[mod,minimum width=32mm,minimum height=36mm] (esp) at (7.0,8.8) {ESP32\\WROOM-32};
+\draw ([yshift=8mm]imu.east)--([yshift=8mm]esp.west) node[midway,lab]{VCC -- 3V3};
+\draw (imu.east)--(esp.west) node[midway,lab]{SDA -- GPIO21};
+\draw ([yshift=-8mm]imu.east)--([yshift=-8mm]esp.west) node[midway,lab]{SCL -- GPIO22};
+\draw (imu.south)--++(0,-.4) node[ground]{};
+\draw (esp.south)--++(0,-.4) node[ground]{};
+\draw (esp.north)--++(0,.4) node[above,lab]{VIN = +5V};
+\node[lab] at (1.8,6.9){100 nF across VCC / GND};
+% Battery sensing and decoupling.
+\draw (10,10.2) node[above,lab]{VBAT} to[R,l=100 k$\Omega$] (10,8.8) coordinate (adc) to[R,l=100 k$\Omega$] (10,7.2) node[ground]{};
+\draw (adc)--(12,8.8) coordinate (cap) -- (13.7,8.8) node[right,lab]{GPIO34};
+\draw (cap) to[C,l=100 nF] (12,7.2) node[ground]{};
+\draw (14.3,10.5) node[above,lab]{+5V} to[C,l=100 $\mu$F] (14.3,9.4) node[ground]{};
+% LED branch.
+\node[lab,anchor=west] at (0,5.9){Local warning LED};
+\draw (0.3,5.2) node[above,lab]{GPIO26} to[R,l=220 $\Omega$] (2.6,5.2) to[leD,l=red LED] (4.8,5.2) -- (5.4,5.2) node[ground]{};
+% Button.
+\node[lab,anchor=west] at (0,3.7){Cancel button};
+\draw (0.3,2.8) node[above,lab]{GPIO27} to[push button,l=CANCEL] (3,2.8) -- (4,2.8) node[ground]{};
+\node[lab,anchor=west] at (0,1.8){GPIO27 uses the ESP32 internal pull-up.};
+% Piezo branch with independent supply labels.
+\node[npn] (q) at (12,3.1) {};
+\draw (8.1,3.1) node[above,lab]{GPIO25} to[R,l=1 k$\Omega$] (q.B);
+\draw (q.E)--++(0,-.65) node[ground]{};
+\draw (q.C) to[buzzer,l=5 V passive piezo] (12,5.5) -- (12,5.9) node[above,lab]{+5V};
+\draw (10.8,3.1) to[R,l_=10 k$\Omega$] (10.8,1.4) node[ground]{};
+\node[lab,right] at (12.5,3.1){2N2222};
+\node[lab,anchor=west] at (0,.5){Supply, GPIO and ground labels identify electrically common nets. MPU-6050 signal pull-ups use 3.3 V.};
+\end{circuitikz}

@@ -1,0 +1,68 @@
+name: Rider cancellation prevents the Blynk event
+version: 1
+author: CrashGuard research prototype
+steps:
+  - wait-serial: 'READY'
+  - set-control:
+      part-id: imu
+      control: accelX
+      value: 0.20
+  - set-control:
+      part-id: imu
+      control: accelZ
+      value: 1.02
+  - set-control:
+      part-id: imu
+      control: rotationZ
+      value: 18
+  - delay: 1200ms
+  - set-control:
+      part-id: imu
+      control: rotationX
+      value: 240
+  - delay: 250ms
+  - set-control:
+      part-id: imu
+      control: accelZ
+      value: 5.0
+  - delay: 100ms
+  - set-control:
+      part-id: imu
+      control: accelX
+      value: 0.0
+  - set-control:
+      part-id: imu
+      control: accelY
+      value: 0.94
+  - set-control:
+      part-id: imu
+      control: accelZ
+      value: 0.34
+  - set-control:
+      part-id: imu
+      control: rotationX
+      value: 0
+  - set-control:
+      part-id: imu
+      control: rotationZ
+      value: 0
+  - wait-serial: 'CRASH_CONFIRMED'
+  - set-control:
+      part-id: cancelButton
+      control: pressed
+      value: 1
+  - wait-serial: 'ALERT_CANCELLED'
+  - delay: 200ms
+  - set-control:
+      part-id: cancelButton
+      control: pressed
+      value: 0
+  - expect-pin:
+      part-id: esp
+      pin: '26'
+      value: 0
+  - delay: 16000ms
+  - expect-pin:
+      part-id: esp
+      pin: '26'
+      value: 0

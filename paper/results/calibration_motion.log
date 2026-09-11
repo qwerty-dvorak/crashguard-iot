@@ -1,0 +1,2 @@
+CALIBRATION_RETRY gravity=1.000 gyro_rms=100.00
+RESULT calibration_rejected

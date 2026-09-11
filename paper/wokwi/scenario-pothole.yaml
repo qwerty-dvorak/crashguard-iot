@@ -1,0 +1,40 @@
+name: High acceleration without rotation is rejected
+version: 1
+author: CrashGuard research prototype
+steps:
+  - wait-serial: 'READY'
+  - set-control:
+      part-id: imu
+      control: accelX
+      value: 0.20
+  - set-control:
+      part-id: imu
+      control: accelZ
+      value: 1.02
+  - set-control:
+      part-id: imu
+      control: rotationZ
+      value: 18
+  - delay: 1200ms
+  - set-control:
+      part-id: imu
+      control: accelZ
+      value: 5.0
+  - delay: 100ms
+  - set-control:
+      part-id: imu
+      control: accelX
+      value: 0.0
+  - set-control:
+      part-id: imu
+      control: accelZ
+      value: 1.0
+  - set-control:
+      part-id: imu
+      control: rotationZ
+      value: 0
+  - wait-serial: 'CANDIDATE_REJECTED'
+  - expect-pin:
+      part-id: esp
+      pin: '26'
+      value: 0
