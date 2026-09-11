@@ -1,5 +1,5 @@
 {
-  "executed_at_utc": "2026-09-11T17:21:53.464757+00:00",
+  "executed_at_utc": "2026-09-11T17:30:52.325741+00:00",
   "platform": "Linux-6.18.44_1-x86_64-with-glibc2.41",
   "python": "3.14.6",
   "numpy": "2.5.1",
@@ -7,7 +7,7 @@
   "matplotlib": "3.11.1",
   "compiler": "c++ (GCC) 14.2.1 20250405",
   "sources": {
-    "report.tex": "338958238cc8a5d0da79a18c9e0da5a29046361ba3e7df3b0eeec7527933f624",
+    "report.tex": "3271b6a741801d8b176917ec190bd98780a6a405a98393092634fd21f543969c",
     "references.bib": "dbd1a4bc2d707e0aa25fc40301be31a695f68403150b4ba95b9478476fb175a4",
     "README.md": "18eb30bdd58c9e0abc48acd145e3da33ae092ef1e7c7dd97b33b05b31783ac9b",
     "reproduce.sh": "67a9a0fc722a2922440f140a7040af94f7bb01350ec5651facc9324d8b875a74",

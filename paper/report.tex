@@ -119,24 +119,27 @@ Pradhan et al. (2026) combine dual-stream transformer processing with Kalman-bas
 
 The following comparison organizes prior work by sensing domain, inference method, and its specific relationship to CrashGuard. It separates direct motorcycle references from human-fall methodology and the cloud interface, so that the reader can identify which design choice each source informs.
 
-\begin{table}[H]\centering\small
-\caption{Representative prior works and their relationship.}\label{tab:prior}
-\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{.21\linewidth}>{\raggedright\arraybackslash}p{.25\linewidth}X@{}}\toprule
-Work & Domain / method & Relationship to this study\\\midrule
-Boubezoul et al. (2013)~\cite{boubezoul2013algorithm} & Motorcycle fall algorithm & Vehicle-domain reference for threshold sequencing.\\
-Boubezoul et al. (2019)~\cite{boubezoul2019dataset} & Public PTW recordings & Four falls and seven manoeuvres used for signal-gate analysis.\\
-Gelmini et al. (2021)~\cite{gelmini2021novel} & Motorcycle crash detection & Motivates diverse critical riding conditions.\\
-SisFall (2017)~\cite{sisfall} & Waist inertial dataset & Motivates explicit negative-activity coverage.\\
-Casilari et al. (2017)~\cite{survey} & Dataset analysis & Guides reporting of protocol and domain differences.\\
-Musci et al. (2018)~\cite{musci} & Online LSTM detection & Learned temporal structure versus explicit states.\\
-Tian et al. (2026)~\cite{tian2026transformer} & Shinbone transformer & Contextual comparison for sequence learning and imbalance.\\
-KFall (2021)~\cite{kfall} & Pre-impact timing dataset & Motivates precise temporal endpoints.\\
-Casilari et al. (2020)~\cite{cnn} & Multi-dataset CNN study & Motivates separate repeatability and domain-transfer claims.\\
-Rodegast et al. (2024)~\cite{rodegast2024} & Simulated motorcycle collision learning & Contrasts passive-safety timing with post-event notification.\\
-Leoni et al. (2025)~\cite{ecall2025} & Dynamics-based motorcycle eCall & Motivates separate high-side and side-slip evaluation.\\
-Pradhan et al. (2026)~\cite{dual2026} & Dual-stream inertial fusion & Motivates richer fusion and subject/group-wise evaluation.\\
-Blynk documentation~\cite{blynkevents} & Device event interface & Defines event code and firmware submission boundary.\\\bottomrule
-\end{tabularx}\end{table}
+\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{.21\linewidth}>{\raggedright\arraybackslash}p{.25\linewidth}>{\raggedright\arraybackslash}p{.46\linewidth}@{}}
+\caption{Comparison of prior motorcycle-crash, human-fall, dataset, and IoT-interface research and its specific role in CrashGuard. The first column identifies the source, the second states its sensing domain or analytical method, and the third explains the design or evaluation decision informed by that source. Public motorcycle data provide an external signal reference; human-fall studies inform methodology but use different mounting positions and labels. The rows describe methodological relationships, not a common-dataset performance ranking.}\label{tab:prior}\\
+\toprule
+Source & Sensing domain / method & Specific relevance and evaluation boundary\\\midrule\endfirsthead
+\toprule Source & Sensing domain / method & Specific relevance and evaluation boundary\\\midrule\endhead
+Boubezoul et al. (2013)~\cite{boubezoul2013algorithm} & Motorcycle fall algorithm & Motivates motorcycle-specific temporal decisions; our implementation exposes the candidate, rotation, and rest states for direct replay.\\
+Boubezoul et al. (2019)~\cite{boubezoul2019dataset} & Public PTW recordings & Supplies four controlled falls and seven critical manoeuvres. We retain their original labels and evaluate filtered acceleration and rotation gates separately.\\
+Gelmini et al. (2021)~\cite{gelmini2021novel} & Motorcycle crash detection & Motivates evaluation across different vehicle behaviours. Our scenarios retain braking, turning, road shocks, and recovery as explicit negative classes.\\
+SisFall (2017)~\cite{sisfall} & Waist inertial dataset & Demonstrates the importance of everyday non-fall examples. We transfer this evaluation principle to motorcycle scenarios, not the human-body labels.\\
+Casilari et al. (2017)~\cite{survey} & Dataset analysis & Motivates disclosure of sensor location, sampling rate, units, event composition, and split procedure to make performance claims interpretable.\\
+Musci et al. (2018)~\cite{musci} & Online LSTM detection & Provides a learned temporal-recognition reference. CrashGuard instead makes its correlation and rest timing explicit in a fixed-rule state machine.\\
+Tian et al. (2026)~\cite{tian2026transformer} & Shinbone transformer & Provides recent attention-based human-fall context and illustrates sensitivity to class balance. The shinbone mounting differs from our handlebar location.\\
+KFall (2021)~\cite{kfall} & Pre-impact timing dataset & Separates pre-impact timing from post-event detection. We report candidate-to-confirmation delay independently of the later cancellation interval.\\
+Casilari et al. (2020)~\cite{cnn} & Multi-dataset CNN study & Motivates separating a fresh random stream from a different acquisition domain. Our public PTW analysis and synthetic classification results remain distinct.\\
+Rodegast et al. (2024)~\cite{rodegast2024} & Simulated motorcycle collision learning & Investigates simulated motorcycle collisions for rapid protective-system activation. Our application instead evaluates a cancellable post-event warning.\\
+Leoni et al. (2025)~\cite{ecall2025} & Dynamics-based motorcycle eCall & Distinguishes rapid high-side motion from slower side-slip dynamics, directly motivating the separate reporting of CrashGuard low-side misses.\\
+Pradhan et al. (2026)~\cite{dual2026} & Dual-stream inertial fusion & Provides a 2026 Kalman-fusion and dual-stream learning reference. Its subject-wise protocol motivates future vehicle/session-wise evaluation.\\
+Blynk documentation~\cite{blynkevents} & Device event interface & Defines the firmware event code and description interface. We instrument this submission boundary and distinguish it from a received phone notification.\\\bottomrule
+\end{longtable}
+\normalsize
 
 \subsection*{Gaps}
 Three gaps motivate the implementation and experiments. First, a high acceleration threshold can miss lower-energy falls, while lowering the threshold can admit ordinary disturbances. Second, classification accuracy alone does not characterize a useful IoT warning system: calibration, cancellation, alarm timing, and connectivity also determine behavior. Third, shared executable logic, reproducible event data, and fault traces are needed to explain exactly why a result occurs. These are the gaps addressed in this prototype; they are not a claim that every cited work lacks these capabilities.
@@ -152,7 +155,7 @@ The experiments use the actual portable detector header and firmware sketch~\cit
 
 The interface table connects each sensing, warning, and user-input function to its controller pin or communication channel. These assignments define the firmware harness observations and make the circuit-to-software mapping explicit.
 
-\begin{table}[H]\centering\small\caption{Signal and power interfaces.}
+\begin{table}[H]\centering\small\caption{ESP32 interface allocation, electrical configuration, and observable role of each sensing, warning, user-input, and communication component. GPIO denotes a general-purpose input/output pin; SDA and SCL are the I\textsuperscript{2}C data and clock lines; ADC1 is the first analog-to-digital converter peripheral. Logic is referenced to the common ground. The stated outputs are firmware commands observed in the peripheral harness, while the battery entry specifies the divider used to reconstruct cell voltage from the ADC input.}
 \begin{tabularx}{\linewidth}{@{}lllX@{}}\toprule
 Element & ESP32 interface & Configuration & Function\\\midrule
 MPU-6050 & GPIO21 / GPIO22 & SDA / SCL & Acceleration and angular-rate acquisition.\\
@@ -204,6 +207,9 @@ Each trajectory contains roll, pitch, and yaw profiles, body-frame gravity, mano
 \mathbf g_b=g_0\widehat{\mathbf g}_b,\qquad
 \|\widehat{\mathbf g}_b\|_2=1.
 \end{equation}
+
+Here the subscript $b$ denotes the sensor body frame and the entries are ordered along its $x$, $y$, and $z$ axes. The symbols $\phi$ and $\theta$ are roll and pitch angles in radians; the trigonometric functions therefore take radian arguments. A hat denotes normalization: $\widehat{\mathbf g}_b$ is a dimensionless $3\times1$ column vector, whereas $\mathbf g_b$ is the physical gravity contribution in m/s$^2$. The notation $\mathbb R^{3\times1}$ specifies three real-valued components, and $\|\cdot\|_2$ denotes the Euclidean norm. The scalar $g_0=9.80665$ m/s$^2$ is standard gravitational acceleration, not a fitted parameter; the constant 1 specifies unit vector length. At $\phi=\theta=0$, the normalized vector is $[0,0,1]^{\mathsf T}$. In this convention positive roll produces a positive $y$ component and positive pitch a negative $x$ component. Yaw does not enter this gravity projection because rotation about the vertical reference does not change gravity.
+
 Linear pulses are added to this gravity vector. The generator constructs angular channels from numerical derivatives of the three angle trajectories, expressed in degrees per second. This Euler-angle derivative construction is a prescribed signal model; coupling between Euler derivatives and rigid-body angular velocity is a model-fidelity limitation for large simultaneous rotations.
 
 Event time is uniformly drawn from 3.8--5.2 s. Acceleration bias has standard deviation 0.018 $g$ and sample noise 0.022 $g$; angular-rate bias has standard deviation 0.8 $\degree$/s and sample noise 1.5 $\degree$/s. Samples are clipped to the configured full-scale ranges. Low-side final roll spans 48--105$\degree$, while high-side roll spans 70--135$\degree$. The low-side distribution deliberately includes final angles below the detector's 55$\degree$ gate. High-side impact pulses span 3.0--11.5 $g$ and low-side pulses span 0.8--5.5 $g$ before vector addition and clipping.
@@ -221,27 +227,39 @@ Startup calibration averages 200 stationary samples. A gravity norm outside 0.85
 A=\|\mathbf a\|_2=\sqrt{a_x^2+a_y^2+a_z^2}.
 \end{equation}
 
+In Equation~\eqref{eq:accel}, $a_x$, $a_y$, and $a_z$ are the simultaneously sampled acceleration components divided by $g_0$; they are numerical values expressed in $g$ units rather than SI acceleration values. Their collection $\mathbf a$ is a column vector, and $A$ is its nonnegative scalar magnitude. Thus $A=1$ corresponds to a physical magnitude of one $g$, while $A=2.0$ corresponds to two $g$. The exponent 2 squares each component and the square root restores the magnitude scale. For the configured $\pm16g$ sensor range, the raw signed acceleration counts are divided by 2048 counts per $g$ in the firmware. Event processing samples these components every 10 ms, equivalent to 100 Hz.
+
+
 Equation~\eqref{eq:rotation} combines the three angular-rate components into one nonnegative rotational magnitude. This scalar has units of degrees per second and is compared with the correlation and final-rest limits. Taking its norm makes the gate insensitive to which sensor axis contains the dominant rotation.
 \begin{equation}\label{eq:rotation}
 \Omega=\|\boldsymbol\omega\|_2=\sqrt{\omega_x^2+\omega_y^2+\omega_z^2}.
 \end{equation}
 
+Here $\omega_x$, $\omega_y$, and $\omega_z$ are the bias-corrected angular rates about the sensor axes, each in degrees per second; $\boldsymbol\omega$ is their $3\times1$ column vector. The scalar $\Omega$ is the Euclidean norm and has the same degrees-per-second unit. A negative component indicates rotation in the opposite axis direction, but squaring removes that sign in the magnitude. The configured $\pm2000\degree$/s raw gyro values are divided by 16.4 counts per degree per second, then their stationary means are subtracted. The detector compares $\Omega$ with 90$\degree$/s for rotational corroboration and 30$\degree$/s for final-rest acceptance; these are configuration thresholds, not factors in the norm formula.
+
+
 Equation~\eqref{eq:tilt} computes the angle between the current acceleration vector and the calibrated reference vector. The transposed product is a scalar dot product, division by both norms produces a dimensionless cosine, and clipping protects the inverse cosine against round-off. The factor $180/\pi$ converts the returned angle to degrees.
 \begin{equation}\label{eq:tilt}
 \Theta=\frac{180}{\pi}\arccos\!\left[\operatorname{clip}\left(\frac{\mathbf a^{\mathsf T}\mathbf r}{\|\mathbf a\|_2\|\mathbf r\|_2},-1,1\right)\right].
 \end{equation}
+
+In this equation $\Theta$ is the scalar angle in degrees, constrained to $[0,180]$ for a valid nonzero input. The current normalized acceleration vector is $\mathbf a$ and the stationary reference is $\mathbf r$, whose components are the means of 200 accepted calibration samples in the same $g$ convention. The superscript $\mathsf T$ denotes transpose, so $\mathbf a^{\mathsf T}\mathbf r$ is the scalar sum $a_xr_x+a_yr_y+a_zr_z$. Dividing by the two Euclidean norms forms a dimensionless cosine. For a scalar input $u$, $\operatorname{clip}(u,-1,1)$ means $\min(1,\max(-1,u))$; the bounds $-1$ and $1$ are the valid inverse-cosine domain. The function $\arccos$ returns radians, and $180/\pi$ converts them to degrees, with $\pi\approx3.141592653589793$. The numerical tolerance $10^{-6}$ applies to the product of the normalized vector norms and prevents division by a near-zero denominator.
+
 When the denominator is below $10^{-6}$, the implementation returns zero tilt. Tilt is derived from the instantaneous acceleration vector; it is most interpretable during the near-gravity rest interval.
 
 Ride activity is present when $|A-1|\geq0.08$ or $\Omega\geq4\degree$/s. Activity evidence accumulates toward 1000 ms and decays at half rate during inactivity. The implementation refreshes a 5000 ms active-riding deadline while evidence is full. Once qualified, a candidate starts on $A\geq2.0$ or $A\leq0.35$. Rotation at or above 90$\degree$/s is correlated with the candidate using a 750 ms interval. Equation~\eqref{eq:rest} defines the Boolean final-rest predicate from three simultaneous scalar comparisons. It requires a large tilt, near-gravity acceleration, and low angular motion; $A$ is the numerical magnitude in $g$ units, while the angular limits retain their explicit units. Holding this predicate continuously establishes the intended post-event rest evidence:
 \begin{equation}
  \label{eq:rest} R=(\Theta\geq55\degree)\land(0.70\leq A\leq1.30)\land(\Omega\leq30\degree/\mathrm{s}).
 \end{equation}
+
+The variable $R$ is Boolean: it is true only when every condition joined by $\land$ (logical AND) is true; otherwise it is false. The measured inputs are $\Theta$ in degrees, numerical acceleration magnitude $A$ in $g$ units, and $\Omega$ in degrees per second. The constants 55$\degree$, 0.70, 1.30, and 30$\degree$/s are, respectively, the minimum tilt, lower near-gravity bound, upper near-gravity bound, and maximum rotational motion allowed at rest. The acceleration interval corresponds to $1g\pm0.30g$. The inclusive comparisons accept values exactly at their limits. The 2000 ms rest hold and 6000 ms candidate timeout are separate time constants enforced by the state machine; they are not encoded by the instantaneous predicate itself.
+
 Holding $R$ for 2000 ms confirms a crash; verification times out after 6000 ms. Confirmation starts the alarm and 15,000 ms cancel window. The finite-state implementation has constant memory and constant work per sample.
 
 \subsection{Algorithm and flowchart}
 The algorithm table presents the implemented procedure in execution order, including calibration, scheduled acquisition, cancellation, and the final event operation. It also identifies where a sensor or network failure changes the normal control path.
 
-\begin{table}[H]\centering\small\caption{Algorithm 1: Executed acquisition and alert procedure.}
+\begin{table}[H]\centering\small\caption{Algorithm 1: Ordered firmware procedure from sensor initialization to one-shot incident submission. Each row identifies an operation in the implemented control path, including its timing or failure branch. Acquisition is scheduled every 10 ms (100 Hz); stationary calibration uses 200 samples; a confirmed event activates the LED and 2400 Hz piezo command before a 15 s cancellation interval. A sensor-read error skips the detector update, and the deadline operation records the service outcome without implying user notification receipt.}
 \begin{tabularx}{\linewidth}{@{}rX@{}}\toprule
 Step & Operation\\\midrule
 1 & Configure GPIO and MPU-6050; stop safely if the sensor probe fails.\\
@@ -280,26 +298,47 @@ Let $TP$, $TN$, $FP$, and $FN$ denote true positives, true negatives, false posi
 Accuracy summarizes the fraction of correct decisions across all events. Its denominator includes both classes, so a high value can coexist with poor sensitivity when negative events are more numerous.
 \begin{equation}\label{eq:accuracy} \mathrm{Accuracy}=\frac{TP+TN}{TP+TN+FP+FN}.\end{equation}
 
+For Equation~\eqref{eq:accuracy}, $TP$ counts true crash events classified as crash, $TN$ counts true non-crash events classified as non-crash, $FP$ counts non-crash events classified as crash, and $FN$ counts crash events classified as non-crash. All four quantities are nonnegative integer event counts. Their sum is the evaluation-set size $N$: $N=675$ for the primary set and $N=270$ for the fresh set. The numerator counts correct decisions across both classes. Accuracy is a dimensionless fraction in $[0,1]$ and is multiplied by 100 when reported as a percentage; it is defined only when $N>0$.
+
+
 Sensitivity measures the fraction of positive events detected. It directly exposes missed crashes and is therefore reported alongside accuracy and broken down by low-side and high-side scenario.
 \begin{equation}\label{eq:sensitivity} \mathrm{Sensitivity}=\frac{TP}{TP+FN}.\end{equation}
+
+Here $TP$ is the number of correctly detected crash events and $FN$ is the number of missed crash events. The denominator $TP+FN$ is the number of labelled positives: 150 in the primary simulation and 60 in the fresh simulation. Sensitivity is also called recall or the true-positive rate. It has no physical unit, lies in $[0,1]$, and is multiplied by 100 for percentage reporting. Its denominator must be nonzero. For the fresh CrashGuard result, the substitution is $43/(43+17)=0.7167$, giving 71.7\% after rounding.
+
 
 Specificity measures the fraction of negative events correctly rejected. It describes nuisance-alarm control within the evaluated negative set and must be interpreted with the number and diversity of those events.
 \begin{equation}\label{eq:specificity} \mathrm{Specificity}=\frac{TN}{TN+FP}.\end{equation}
 
+In Equation~\eqref{eq:specificity}, $TN$ counts correctly rejected non-crash events and $FP$ counts non-crash events that trigger a false detection. Their sum is the negative-event denominator: 525 in the primary simulation and 210 in the fresh simulation. Specificity is a dimensionless fraction between zero and one, reported in percent after multiplication by 100, and requires at least one labelled negative. For the fresh CrashGuard result, $TN=210$ and $FP=0$, so the observed fraction is 1. This finite-sample observation is accompanied by a Wilson interval rather than interpreted as universal perfect rejection.
+
+
 Precision measures the proportion of predicted positives that are true positives. It characterizes the reliability of an emitted event within the test distribution and can change when event prevalence changes.
 \begin{equation}\label{eq:precision} \mathrm{Precision}=\frac{TP}{TP+FP}.\end{equation}
+
+Here $TP$ is the count of correctly classified crash events and $FP$ the count of false crash detections. The denominator $TP+FP$ counts all events predicted positive, irrespective of their true class. Precision is dimensionless on $[0,1]$ and describes the positive predictions under the test-set event prevalence. If no positive event is predicted, the mathematical ratio has a zero denominator; the evaluation code assigns zero precision for that case. Every reported detector predicts at least one positive event, so this fallback does not affect the presented values. CrashGuard has fresh-set precision $43/(43+0)=1$.
+
 
 The F1-score combines precision and sensitivity into one count-based statistic. It penalizes both false positives and false negatives and complements specificity without replacing the separate confusion counts.
 \begin{equation}\label{eq:f1} F_1=\frac{2TP}{2TP+FP+FN}.\end{equation}
 
+In this expression $TP$, $FP$, and $FN$ are event counts as defined above. The constant factor 2 weights the correctly detected positives in the count form of the harmonic mean of precision and sensitivity; the subscript 1 indicates equal precision and recall weighting. F1 is dimensionless and reported as a decimal between zero and one, unlike the percentage columns for accuracy, sensitivity, and specificity. The denominator must be positive. For the fresh CrashGuard counts, $2(43)/[2(43)+0+17]=86/103=0.83495$, rounded to 0.835.
+
+
 The false-positive rate measures the fraction of negative events that trigger incorrectly. It equals one minus specificity and supports a direct comparison of nuisance alarms between the three rules on identical events.
 \begin{equation}\label{eq:fpr} \mathrm{FPR}=\frac{FP}{TN+FP}.\end{equation}
 
+The abbreviation FPR denotes false-positive rate. The numerator $FP$ counts negative events incorrectly predicted positive, and the denominator $TN+FP$ counts all labelled negatives. The rate is dimensionless, lies in $[0,1]$, and equals one minus specificity when the negative denominator is nonzero. Multiplication by 100 converts it to percent. For the fresh acceleration-only baseline, $FP=108$ and $TN=102$, giving $108/210=0.5143$, or 51.4\%; for CrashGuard the corresponding numerator is zero. This event-level rate is distinct from false alarms per riding hour, which would require an exposure-time denominator.
+
+
 Delay is confirmation time minus the start of the candidate that reaches confirmation. It is computed only for detected positive events. The acceleration-only method has zero additional confirmation hold by definition. For a binomial proportion $\hat p=x/n$, the Wilson equation gives lower and upper confidence bounds from the observed success count $x$ and sample count $n$. Using $z=1.959964$ gives a 95\% interval that remains informative when all observed negatives are rejected. Sensitivity and specificity use their respective positive and negative denominators~\cite{wilson1927interval}:
-\begin{equation}
-\frac{\hat p+z^2/(2n)\ \pm\ z\sqrt{\hat p(1-\hat p)/n+z^2/(4n^2)}}{1+z^2/n}.
+\begin{equation}\label{eq:wilson}
+\begin{aligned}
+p_{\mathrm L}&=\frac{\hat p+z^2/(2n)-z\sqrt{\hat p(1-\hat p)/n+z^2/(4n^2)}}{1+z^2/n},\\[2mm]
+p_{\mathrm U}&=\frac{\hat p+z^2/(2n)+z\sqrt{\hat p(1-\hat p)/n+z^2/(4n^2)}}{1+z^2/n}.
+\end{aligned}
 \end{equation}
-These bounds describe finite generated event counts; they do not remove model-domain dependence.
+In Equation~\eqref{eq:wilson}, $p_{\mathrm L}$ and $p_{\mathrm U}$ are the lower and upper limits for the relevant success probability $p$. The first expression subtracts the uncertainty term to obtain the lower limit; the second adds it to obtain the upper limit. Together they define the interval $[p_{\mathrm L},p_{\mathrm U}]$. The integer $x$ is the observed number of successes, $n>0$ is the number of eligible events, and $\hat p=x/n$ is the estimated success proportion. For sensitivity, $x=TP$ and $n=TP+FN$; for specificity, $x=TN$ and $n=TN+FP$. The dimensionless constant $z=1.959963984540054$ is the 97.5th percentile of the standard normal distribution, producing the two-sided 95\% interval; 1.959964 is its rounded presentation. The constants 2 and 4 arise from the Wilson score construction and are not tuned detector settings. All proportions and bounds are dimensionless and become percentages after multiplication by 100. These intervals characterize finite counts within the generated event distribution and do not remove model-domain dependence.
 
 \section{Experimental Results and Discussion}
 \subsection{Experimental conditions}
@@ -310,7 +349,7 @@ The original 675-event pipeline was re-executed and reproduced its confusion cou
 \subsection{Original and fresh performance comparison}
 The reproduced comparison below places all three decision rules on the same 675 original events. Confusion counts expose the origin of each score: CrashGuard improves nuisance-alarm rejection over acceleration-only detection, while the strict ordered rule loses substantially more positive events.
 
-\begin{table}[H]\centering\small\caption{Reproduced 675-event comparison. Acc., sensitivity (Sens.), and specificity (Spec.) are percentages.}
+\begin{table}[H]\centering\small\caption{Event-level comparison of three executable detection rules on the same 675-event simulation (seed 20260828; 150 crash events and 525 non-crash events). TP, TN, FP, and FN denote true positives, true negatives, false positives, and false negatives, respectively, and are event counts. Acc., Sens., and Spec. are accuracy, sensitivity, and specificity in percent; F1 is dimensionless on $[0,1]$. Each row is one detector, so differences reflect rule behavior on identical inputs rather than differences in data composition.}
 \resizebox{\linewidth}{!}{\begin{tabular}{@{}lrrrrrrrr@{}}\toprule
 Detector & TP & TN & FP & FN & Acc. & Sens. & Spec. & F1\\\midrule
 Acceleration-only & 134 & 236 & 289 & 16 & 54.8 & 89.3 & 45.0 & 0.468\\
@@ -319,7 +358,7 @@ CrashGuard & 114 & 525 & 0 & 36 & 94.7 & 76.0 & 100.0 & 0.864\\\bottomrule
 \end{tabular}}\end{table}
 The next table evaluates the same frozen rules on 270 newly generated events. This separate random stream checks whether the earlier specificity advantage persists and reveals the remaining sensitivity cost without selecting thresholds from these results.
 
-\begin{table}[H]\centering\small\caption{Fresh 270-event test with unchanged detector settings.}
+\begin{table}[H]\centering\small\caption{Independent-random-stream evaluation of the unchanged rules on 270 generated events (seed 20260911; 60 crash and 210 non-crash events). TP/TN/FP/FN are event-level confusion counts; Acc., Sens., and Spec. are accuracy, sensitivity, and specificity in percent; F1 is a dimensionless precision--recall score. No threshold is selected using this set. The comparison tests repeatability within the same signal-generator family: it is not a vehicle-wise or road-session-wise external validation.}
 \resizebox{\linewidth}{!}{\input{results/fresh_table.tex}}\end{table}
 On the original replay, CrashGuard removes 289 false positives relative to acceleration-only detection but introduces 20 additional misses. On the fresh set, it removes 108 false positives while introducing nine additional misses. This is a specificity--sensitivity tradeoff. The strict ordered rule is also specific but detects only 13 of 60 fresh positive events. CrashGuard detects 43, a gain of 30 events on that same set.
 
@@ -327,7 +366,7 @@ Fresh-set sensitivity is 71.7\% with a 95\% Wilson interval of 59.2--81.5\%. Obs
 
 The partition table reports whole-event counts and confusion outcomes for each data subset. It distinguishes the retrospective development/validation/test breakdown from the fresh-seed experiment, preventing those two evaluation roles from being conflated.
 
-\begin{table}[H]\centering\small\caption{Event-level partition results for the unchanged CrashGuard detector.}
+\begin{table}[H]\centering\small\caption{CrashGuard confusion counts and F1-score by whole-event data partition. The original simulation is split within each of nine scenarios into 45 development, 15 validation, and 15 retrospective-test events, giving 405/135/135 events overall. The fresh-seed set contains 30 additional events per scenario. TP/TN/FP/FN are event counts and sum to the Events column; F1 is dimensionless. These are fixed-rule evaluations, with no learned weights fitted in any partition.}
 \begin{tabular}{@{}lrrrrrr@{}}\toprule
 Partition & Events & TP & TN & FP & FN & F1\\\midrule
 Development & 405 & 67 & 315 & 0 & 23 & 0.854\\
@@ -351,9 +390,9 @@ The paired plots connect fresh-set classification errors with confirmation timin
 \subsection{External public-data gate analysis}
 The public-data table summarizes the four fall windows after unit conversion and resampling. Peak and minimum acceleration explain unloading-gate activation, while peak angular rate explains the rotation gate; the final column records independent gate crossings rather than a complete crash decision.
 
-\begin{table}[H]\centering\small\caption{Public PTW fall windows after filtering and resampling. Gates are evaluated independently.}
+\begin{table}[H]\centering\small\caption{Inertial signal extrema in four public powered-two-wheeler (PTW) fall windows after anti-aliased resampling from 1 kHz to 100 Hz. Each row summarizes a 3 s interval centered on the specified event time. Peak and minimum $A$ are acceleration-magnitude values in $g$ units; peak $\Omega$ is angular-rate magnitude in degrees per second. ``Both gates'' means that the acceleration condition ($A\geq2.0$ or $A\leq0.35$) and rotation condition ($\Omega\geq90\degree$/s) each occur somewhere in that window; their temporal correlation and final-rest condition are not implied.}
 \begin{tabularx}{\linewidth}{@{}Xrrrr@{}}\toprule
-Fall recording & Peak $A$ ($g$) & Min. $A$ ($g$) & Peak $\Omega$ & Both gates\\\midrule
+Fall recording & Peak $A$ ($g$) & Min. $A$ ($g$) & Peak $\Omega$ ($\degree$/s) & Both gates\\\midrule
 Slippery straight road & 1.169 & 0.013 & 179.4 & Yes\\
 Leaning motorcycle & 1.878 & 0.041 & 144.1 & Yes\\
 Roundabout & 1.690 & 0.011 & 150.5 & Yes\\
@@ -375,7 +414,7 @@ The virtual-hardware image and state traces provide a replay dashboard: acquisit
 The firmware test table pairs each injected condition with its intended response and actual trace. Conformance cases verify specified behavior, while fault-characterization cases preserve evidence of unmet continuity or recovery criteria even when the regression assertion itself succeeds.
 
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{.05\linewidth}>{\raggedright\arraybackslash}p{.20\linewidth}>{\raggedright\arraybackslash}p{.29\linewidth}>{\raggedright\arraybackslash}p{.35\linewidth}@{}}
-\caption{Executed firmware cases. Conformance tests check expected source behavior; fault-characterization tests expose undesirable behavior rather than certify fault tolerance.}\label{tab:tests}\\
+\caption{Fourteen exact-firmware experiments with deterministic sensor, GPIO, clock, and service models. ID identifies the case; Stimulus specifies the injected input or failure; Expected behavior / criterion states the control requirement; Actual result records the observed trace and interpretation. All reported times are virtual-clock milliseconds unless seconds are explicitly written. Alarm 1/0 means the local warning is commanded active/inactive. T9, T11, and T13 characterize continuity, blocking, and recovery weaknesses; a passing regression assertion reproduces these observations and does not certify fault tolerance.}\label{tab:tests}\\
 \toprule ID & Stimulus & Expected behavior / criterion & Actual result and interpretation\\\midrule\endfirsthead
 \toprule ID & Stimulus & Expected behavior / criterion & Actual result and interpretation\\\midrule\endhead
 T1 & Sensor absent at boot & Probe failure; safe stop; alarm off & Fatal marker and safe-stop loop observed; alarm 0. Conforms.\\
@@ -405,7 +444,7 @@ The successful GPIO/tone assertions characterize commanded outputs. A disconnect
 \subsection{Expected performance versus actual performance}
 The objective-to-result table brings classifier performance, warning timing, recovery, and endurance into a common assessment. Each row connects a design aim to an executed observation and states the engineering implication, including objectives that require further improvement.
 
-\begin{table}[H]\centering\small\caption{Design objectives compared with executed outcomes.}
+\begin{table}[H]\centering\small\caption{System-level acceptance objectives, corresponding experimental observations, and engineering interpretation. The classification rows report successful decisions or false alarms divided by the relevant event count in the original and fresh simulations. Timing rows use the deterministic firmware clock; the recovery rows report whether valid-rest evidence and eventual event delivery satisfy their intended criteria. The endurance row refers specifically to the 120 mA, 5 V load and 90\% converter-efficiency simulation. Meeting one row does not establish that the remaining classification, recovery, and power objectives are met.}
 \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{.26\linewidth}>{\raggedright\arraybackslash}p{.36\linewidth}X@{}}\toprule
 Objective & Actual experiment & Interpretation\\\midrule
 Reject road disturbances & 0/525 original and 0/210 fresh negative false alarms & Achieved within both scenario sets.\\
@@ -418,20 +457,42 @@ Support a 12 h nominal operating case & 12.64 h at 120 mA and 90\% efficiency & 
 \end{tabularx}\end{table}
 
 \subsection{Power simulation}
-The cell model begins with $q_0=2.6\times0.90=2.34$ Ah usable charge. Its voltage varies linearly with remaining charge: $V(q)=3.0+1.2q/q_0$ V. For a constant 5 V load current $I_L$ and converter efficiency $\eta$, the charge-update equation applies a step $\Delta t_s=1$ s. The first term equates converted cell power with the fixed output power, and the second converts current integrated over seconds into ampere-hours. Explicitly including $V_{out}=5$ V and the factor 3600 makes both dimensional relationships visible:
-\begin{equation}
- I_{\mathrm{cell},k}=\frac{V_{\mathrm{out}}I_L}{\eta V(q_k)},\qquad q_{k+1}=q_k-\frac{I_{\mathrm{cell},k}\Delta t_s}{3600},\qquad \Delta t_s=1\,\mathrm{s}.
+The battery simulation uses a finite usable-charge reservoir rather than a fixed operating-time input. Equation~\eqref{eq:charge_initial} calculates its initial charge from the nominal capacity and the usable-capacity fraction. Here $C_{\mathrm{nom}}=2.6$ Ah (2600 mAh) is nominal cell capacity, $f_{\mathrm{use}}=0.90$ is the dimensionless fraction made available to the model, and $q_0$ is the initial usable charge in ampere-hours. The subscript 0 denotes the start of discharge. Both inputs are prescribed simulation parameters, and the multiplication gives $q_0=2.34$ Ah.
+\begin{equation}\label{eq:charge_initial}
+q_0=C_{\mathrm{nom}}f_{\mathrm{use}}=(2.6\,\mathrm{Ah})(0.90)=2.34\,\mathrm{Ah}.
 \end{equation}
-Execution ends when $q\leq0$. The sweep uses 90, 120, and 180 mA loads and 80, 90, and 95\% efficiencies. These are explicit simulation inputs spanning light, nominal, and heavier operation. At nominal load and efficiency, depletion occurs after 45,490 one-second steps, or 12.64 h. The full sweep spans 7.49--17.78 h.
-The energy plot shows how endurance changes across the nine executed load and efficiency combinations. Increasing load shortens operating time, and improved conversion efficiency extends it; the nominal point is one explicit case within this sensitivity sweep.
 
+Equation~\eqref{eq:cell_voltage} defines the linear voltage profile used during discharge. The variable $q$ is remaining usable charge in Ah and satisfies $0\leq q\leq q_0$ while the model is evaluated. The function $V(q)$ returns cell voltage in volts. The endpoint parameters are $V_{\min}=3.0$ V at zero remaining charge and $V_{\max}=4.2$ V at the initial charge. Their difference is 1.2 V, and $q/q_0$ is a dimensionless state-of-charge fraction. The expression therefore adds a voltage increment to a voltage baseline; it does not add charge directly to voltage.
+\begin{equation}\label{eq:cell_voltage}
+V(q)=V_{\min}+(V_{\max}-V_{\min})\frac{q}{q_0}
+     =3.0\,\mathrm V+(1.2\,\mathrm V)\frac{q}{q_0}.
+\end{equation}
+
+The load is held at a regulated output voltage, so the cell current changes as the simulated cell voltage decreases. In Equation~\eqref{eq:cell_current}, $k=0,1,2,\ldots$ is the discrete integration-step index, $q_k$ is the remaining charge at that step, and $I_{\mathrm{cell},k}$ is the cell current in amperes. The output voltage is $V_{\mathrm{out}}=5.0$ V, the output load current $I_L$ is 0.090, 0.120, or 0.180 A (90, 120, or 180 mA), and the constant converter efficiency $\eta$ is 0.80, 0.90, or 0.95. All nine load/efficiency combinations are executed. The numerator $V_{\mathrm{out}}I_L$ is output power in watts; dividing by dimensionless efficiency and cell voltage gives input current in amperes.
+\begin{equation}\label{eq:cell_current}
+I_{\mathrm{cell},k}=\frac{V_{\mathrm{out}}I_L}{\eta V(q_k)}.
+\end{equation}
+
+Equation~\eqref{eq:charge_update} advances the charge state with a forward-Euler integration step. Both $q_k$ and $q_{k+1}$ are in Ah, $I_{\mathrm{cell},k}$ is in A, and $\Delta t_s=1$ s is the fixed time increment. The conversion constant $\kappa_t=3600$ s/h converts the current--time product from ampere-seconds to ampere-hours before it is subtracted. Its subscript $t$ denotes time-unit conversion, not a tunable model parameter. Iteration stops immediately after the first update for which the remaining charge is nonpositive; the final step can overshoot zero by less than one step's charge consumption.
+\begin{equation}\label{eq:charge_update}
+q_{k+1}=q_k-\frac{I_{\mathrm{cell},k}\Delta t_s}{\kappa_t},\qquad
+\Delta t_s=1\,\mathrm{s},\quad \kappa_t=3600\,\mathrm{s\,h^{-1}}.
+\end{equation}
+
+At the nominal $I_L=0.120$ A and $\eta=0.90$ operating point, depletion occurs after 45,490 one-second steps, or 12.64 h after rounding. Across the nine combinations, simulated runtime spans 7.49--17.78 h. The energy plot below displays the load and efficiency sensitivity using these fixed model parameters. Each point is one completed integration, and each curve holds converter efficiency constant while varying the 5 V load current.
 \fig{figures/energy.pdf}{.85}{Time-stepped battery discharge results for nine load/efficiency combinations. The model includes changing cell voltage and converter loss.}
-At the same load and efficiency, a constant 3.7 V budget gives $2.34(3.7)(0.9)/(5\times0.12)=12.99$ h. The time-stepped result is 0.35 h lower because the linear discharge curve averages 3.6 V. As an analytical cross-check, integrating the model yields $t=\eta q_0(3.6)/(5I_L)$ hours, agreeing with the discrete result to within its one-second termination resolution. The model does not contain cell aging, temperature dependence, or burst-load voltage sag; these are extensions to the simulated physics.
+
+An analytical integral checks the numerical discharge model without introducing a new battery experiment. Equation~\eqref{eq:runtime} gives duration $t_{\mathrm{lin}}$ in hours for the same linear voltage profile and constant load/efficiency settings. The symbols $q_0$, $\eta$, $V_{\min}$, $V_{\max}$, $V_{\mathrm{out}}$, and $I_L$ retain the definitions above. The factor 2 computes the mean of the endpoint voltages, giving 3.6 V for this model. The units reduce from Ah$\cdot$V/(V$\cdot$A) to hours. The nominal substitution gives 12.636 h, agreeing with the one-second numerical termination resolution.
+\begin{equation}\label{eq:runtime}
+t_{\mathrm{lin}}=\frac{\eta q_0(V_{\min}+V_{\max})}{2V_{\mathrm{out}}I_L}.
+\end{equation}
+
+For comparison, a constant-cell-voltage calculation uses $V_{\mathrm{const}}=3.7$ V, the same $q_0=2.34$ Ah, $\eta=0.90$, $V_{\mathrm{out}}=5.0$ V, and $I_L=0.120$ A. Its duration $t_{\mathrm{const}}=\eta q_0V_{\mathrm{const}}/(V_{\mathrm{out}}I_L)$ is 12.987 h, rounded to 12.99 h. The 0.35 h difference arises from using 3.7 V instead of the linear model's 3.6 V mean. These calculations describe the specified voltage/charge model; cell aging, temperature effects, and burst-load voltage sag are additional physical mechanisms outside that model.
 
 \subsection{Performance comparison with research literature}
 The contextual comparison retains each published method's original application domain and evaluation protocol. Only the three rules evaluated on the fresh motorcycle events support a direct ranking; the recent learned models instead identify relevant alternatives for future development.
 
-\begin{table}[H]\centering\small\caption{Contextual comparison. Only the three replay rules share the same motorcycle test data; literature results retain their own domain and protocol.}
+\begin{table}[H]\centering\small\caption{Application-aware comparison of CrashGuard, its same-data rule baselines, and published human-fall systems. Sens., Spec., and Acc. denote sensitivity, specificity, and accuracy in percent; FP is the number of falsely classified non-crash events. The first three rows share 270 simulated motorcycle events, allowing direct comparison. The cited human-fall rows retain their own sensing location, dataset, and timing objective, so their values provide research context rather than a numerical superiority claim across incompatible evaluation protocols.}
 \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{.24\linewidth}>{\raggedright\arraybackslash}p{.23\linewidth}>{\raggedright\arraybackslash}p{.23\linewidth}X@{}}\toprule
 Method & Evaluation domain & Reported outcome & Relationship\\\midrule
 CrashGuard & Fresh simulated motorcycle events & Sens. 71.7\%; acc. 93.7\% & State-based local warning with cancellation.\\
