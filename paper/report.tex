@@ -468,64 +468,7 @@ The nominal time-stepped battery case yielded 12.64 h at a 120 mA, 5 V load and 
 Adheesh Garg, Ayan Gatani, and Aastha Gupta: Conceptualization, Methodology, Software, Validation, Investigation, Data curation, Visualization, Writing -- original draft. Syamasudha Veeragandham: Supervision, Writing -- review and editing.
 
 \section*{Data Availability}
-The complete research artifact is publicly available on GitHub at \url{https://github.com/qwerty-dvorak/crashguard-iot/tree/main/paper}. This self-contained repository directory provides the manuscript in PDF and LaTeX formats, bibliography, ESP32 firmware, circuit definitions, simulation and evaluation scripts, generated datasets, event predictions, data partitions, experimental logs, figures, and machine-readable results. All paths and reproduction commands resolve within this directory. The third-party powered-two-wheeler recordings are attributed to Boubezoul et al.~\cite{boubezoul2019dataset}; the published supplementary archive, its source URL, and SHA-256 checksum are included with the data documentation. Running \texttt{sh reproduce.sh} regenerates the motion datasets, replays the detector, executes the firmware and power simulations, and rebuilds the manuscript. Appendix A provides the artifact index and reproduction procedure.
+The complete research artifact is publicly available on GitHub at \url{https://github.com/qwerty-dvorak/crashguard-iot/tree/main/paper}. This self-contained repository directory provides the manuscript in PDF and LaTeX formats, bibliography, ESP32 firmware, circuit definitions, simulation and evaluation scripts, generated datasets, event predictions, data partitions, experimental logs, figures, and machine-readable results. All paths and reproduction commands resolve within this directory. The third-party powered-two-wheeler recordings are attributed to Boubezoul et al.~\cite{boubezoul2019dataset}; the published supplementary archive, its source URL, and SHA-256 checksum are included with the data documentation. Running \texttt{sh reproduce.sh} regenerates the motion datasets, replays the detector, executes the firmware and power simulations, and rebuilds the manuscript. The repository README provides the reproduction procedure and links to all artifacts.
 
 \bibliography{references}
-\clearpage
-\appendix
-\section{Reproducibility and artifact index}
-Clone the public repository and enter its self-contained research-artifact directory. The reproduction script verifies and extracts the bundled public data, generates both motion datasets, executes all experiments, writes provenance records, and builds the manuscript. No source file or result from a separate report is required.
-\begin{lstlisting}
-git clone https://github.com/qwerty-dvorak/crashguard-iot.git
-cd crashguard-iot/paper
-python3 -m pip install -r analysis/requirements.txt
-sh reproduce.sh
-\end{lstlisting}
-Dependencies are a C++17 compiler, Python with NumPy/SciPy/Matplotlib, and a LaTeX installation containing the packages declared in \texttt{report.tex}. Tool versions and SHA-256 file hashes are recorded in the companion provenance files. The local cloud test double contains fixed non-network values; it does not require an account token.
-
-The artifact index maps the principal report claims to their source, input, or result file. It lets a reader locate the event decisions, raw traces, power cases, and provenance needed to reproduce or inspect the experiments.
-
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{.46\linewidth}>{\raggedright\arraybackslash}p{.46\linewidth}@{}}
-\caption{Evidence files relative to the experiment directory.}\\\toprule
-Artifact & Purpose\\\midrule\endfirsthead
-\toprule Artifact & Purpose\\\midrule\endhead
-\path{analysis/firmware_harness.cpp} & Includes the actual sketch; exercises fourteen firmware cases across connected and disabled builds.\\
-\path{analysis/stubs/} and \path{analysis/cloud/} & Instrumented peripheral and local event-service models.\\
-\path{results/firmware_tests.json} and \path{results/*.log} & Per-case observations and serial output.\\
-\path{results/fresh_imu.csv} & 270,000 fresh six-axis samples.\\
-\path{results/fresh_events.csv} & Event labels, predictions, and delay values for all three methods.\\
-\path{results/splits.csv} & Original event-to-partition assignments.\\
-\path{results/experiment_summary.json} & Fresh metrics, Wilson intervals, partition metrics, and power results.\\
-\path{results/circuit_dc.csv} & 39 battery-divider and LED operating-point combinations.\\
-\path{results/energy.csv} & Nine time-stepped discharge experiments.\\
-\path{results/event_results.csv} & Original 675-event decisions and delays.\\
-\path{results/external_ptw_features.csv} & All eleven public-recording signal summaries.\\
-\path{wokwi/diagram.json} & Virtual circuit connectivity and component definitions.\\
-\path{wokwi/crash_detector.h} & Common detector compiled by replay and firmware.\\
-\path{results/provenance.json} and \path{results/manifest.sha256} & Execution environment, source identity, and output integrity.\\\bottomrule
-\end{longtable}
-
-\clearpage
-\section{Manuscript requirement coverage}
-The coverage table links the requested manuscript elements to their location in the finished paper. It records the literature discussion, mathematical treatment, experimental figures, and declarations as a final structural check.
-
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{.39\linewidth}>{\raggedright\arraybackslash}p{.53\linewidth}@{}}
-\caption{Mapping of the supplied task template to this report.}\\\toprule
-Template requirement & Included evidence\\\midrule\endfirsthead
-\toprule Template requirement & Included evidence\\\midrule\endhead
-Title, authors, affiliation, email, corresponding author & First-page title block with all supplied student emails and template faculty email.\\
-One-page abstract, at most 300 words & First-page abstract.\\
-Eight keywords & Eight single-word keywords below the abstract.\\
-Introduction, at least ten cited paragraphs & Section 1: twelve justified paper-specific paragraphs, explicit gaps and improvements, and four objectives.\\
-Related work, at least ten cited paragraphs & Section 2: thirteen cited paragraphs and representative-work table.\\
-Gaps and problem statement & Explicit subsections at the end of Section 2.\\
-Dataset, architecture, circuit, hardware image & Section 3: data construction, block diagram, complete circuit, executed virtual-hardware image.\\
-Flowchart, equations, algorithms, metrics, data split & Section 3: flowchart, numbered equations, algorithm table, metrics, event partitions.\\
-Experimental conditions, graphs, tables & Section 4: execution protocol, scenario plots, confusion matrix, delay and energy plots.\\
-Test cases and fault-handling mechanism & Section 4: fourteen executed cases with observed fault responses.\\
-Performance comparisons, expected versus actual & Section 4: common-data comparisons, contextual literature table, objective/result table.\\
-Limitations and future work; conclusion & Sections 5 and 6.\\
-CRediT, funding, competing interest, data availability & Dedicated statements after the conclusion.\\
-References & Cited bibliography with publication identifiers.\\\bottomrule
-\end{longtable}
 \end{document}
