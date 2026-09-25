@@ -1,5 +1,5 @@
 {
-  "executed_at_utc": "2026-09-25T06:56:09.373036+00:00",
+  "executed_at_utc": "2026-09-25T10:48:43.285473+00:00",
   "platform": "Windows-11-10.0.26200-SP0",
   "python": "3.13.14",
   "numpy": "2.2.6",
@@ -7,7 +7,7 @@
   "matplotlib": "3.10.7",
   "compiler": "c++ / gcc not in path (reproduced via python runtime)",
   "sources": {
-    "main_manuscript.tex": "8a5238daa4fc3c5b9cd1033d5f84338d42b7fbba53a950b2f1ddc363c273aa46",
+    "main_manuscript.tex": "82ade49ee201ba23972ccd926305e3f0eecf9849716908435ff644f5ee4658a0",
     "references.bib": "ff017c89464d74323927f42b3c90bd2a524ccef3db49825964d060005af2bc06",
     "README.md": "de5f5fef14d9c6e7951876ac85c7198a9c8c3c2f31b992e2723be296b621fe24",
     "reproduce.sh": "38d65598f27ca0e4d5222952baf9cd9550ef0c92b4b1923a6f2bc0ae10041c66",
