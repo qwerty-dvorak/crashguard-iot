@@ -18,19 +18,34 @@
       "median_confirmation_delay_ms": 0.0
     },
     "Strict ordered-threshold comparison": {
-      "tp": 13,
+      "tp": 12,
       "tn": 210,
       "fp": 0,
-      "fn": 47,
-      "sensitivity": 0.21666666666666667,
+      "fn": 48,
+      "sensitivity": 0.2,
       "specificity": 1.0,
       "precision": 1.0,
-      "f1": 0.3561643835616438,
-      "sensitivity_ci_low": 0.13123044048190308,
-      "sensitivity_ci_high": 0.33620027573194783,
+      "f1": 0.33333333333333337,
+      "sensitivity_ci_low": 0.11828505322897494,
+      "sensitivity_ci_high": 0.317818058056279,
       "specificity_ci_low": 0.9820359492407167,
       "specificity_ci_high": 1.0,
-      "median_confirmation_delay_ms": 3120.0
+      "median_confirmation_delay_ms": 3130.0
+    },
+    "Boubezoul et al. (2013)": {
+      "tp": 52,
+      "tn": 176,
+      "fp": 34,
+      "fn": 8,
+      "sensitivity": 0.8666666666666667,
+      "specificity": 0.8380952380952381,
+      "precision": 0.6046511627906976,
+      "f1": 0.7123287671232877,
+      "sensitivity_ci_low": 0.7583484032350039,
+      "sensitivity_ci_high": 0.9308589051941303,
+      "specificity_ci_low": 0.7822777427624442,
+      "specificity_ci_high": 0.8817656133908024,
+      "median_confirmation_delay_ms": 2325.0
     },
     "CrashGuard": {
       "tp": 43,
@@ -46,6 +61,41 @@
       "specificity_ci_low": 0.9820359492407167,
       "specificity_ci_high": 1.0,
       "median_confirmation_delay_ms": 2330.0
+    }
+  },
+  "fresh_mcnemar": {
+    "crashguard_vs_boubezoul": {
+      "statistic": 13.395348837209303,
+      "p_value": 0.00025224902332732224,
+      "p_exact": 0.00017015517460094998,
+      "p_asymptotic": 0.00025224902332732224,
+      "b": 34,
+      "c": 9,
+      "a": 219,
+      "d": 8,
+      "method": "mcnemar_continuity"
+    },
+    "crashguard_vs_ordered": {
+      "statistic": 29.032258064516128,
+      "p_value": 7.118304168329814e-08,
+      "p_exact": 9.313225746154785e-10,
+      "p_asymptotic": 7.118304168329814e-08,
+      "b": 31,
+      "c": 0,
+      "a": 222,
+      "d": 17,
+      "method": "mcnemar_continuity"
+    },
+    "crashguard_vs_baseline": {
+      "statistic": 82.08547008547009,
+      "p_value": 0.0,
+      "p_exact": 1.0825801034098942e-22,
+      "p_asymptotic": 0.0,
+      "b": 108,
+      "c": 9,
+      "a": 145,
+      "d": 8,
+      "method": "mcnemar_continuity"
     }
   },
   "partition_metrics": {
@@ -79,6 +129,21 @@
         "specificity_ci_low": 0.9879518214635491,
         "specificity_ci_high": 0.9999999999999999,
         "median_confirmation_delay_ms": 3120.0
+      },
+      "Boubezoul et al. (2013)": {
+        "tp": 82,
+        "tn": 261,
+        "fp": 54,
+        "fn": 8,
+        "sensitivity": 0.9111111111111111,
+        "specificity": 0.8285714285714286,
+        "precision": 0.6029411764705882,
+        "f1": 0.7256637168141592,
+        "sensitivity_ci_low": 0.8342945337394592,
+        "sensitivity_ci_high": 0.9542695074632055,
+        "specificity_ci_low": 0.7830554998610295,
+        "specificity_ci_high": 0.8661699828150171,
+        "median_confirmation_delay_ms": 2290.0
       },
       "CrashGuard": {
         "tp": 67,
@@ -127,6 +192,21 @@
         "specificity_ci_high": 1.0,
         "median_confirmation_delay_ms": 3110.0
       },
+      "Boubezoul et al. (2013)": {
+        "tp": 25,
+        "tn": 87,
+        "fp": 18,
+        "fn": 5,
+        "sensitivity": 0.8333333333333334,
+        "specificity": 0.8285714285714286,
+        "precision": 0.5813953488372093,
+        "f1": 0.684931506849315,
+        "sensitivity_ci_low": 0.6643564949358398,
+        "sensitivity_ci_high": 0.9266345762815145,
+        "specificity_ci_low": 0.7452274603731152,
+        "specificity_ci_high": 0.888722146216327,
+        "median_confirmation_delay_ms": 2230.0
+      },
       "CrashGuard": {
         "tp": 23,
         "tn": 105,
@@ -140,7 +220,7 @@
         "sensitivity_ci_high": 0.8820761185551049,
         "specificity_ci_low": 0.9647059230708901,
         "specificity_ci_high": 1.0,
-        "median_confirmation_delay_ms": 2310.0
+        "median_confirmation_delay_ms": 2300.0
       }
     },
     "test": {
@@ -173,6 +253,21 @@
         "specificity_ci_low": 0.9647059230708901,
         "specificity_ci_high": 1.0,
         "median_confirmation_delay_ms": 3110.0
+      },
+      "Boubezoul et al. (2013)": {
+        "tp": 28,
+        "tn": 88,
+        "fp": 17,
+        "fn": 2,
+        "sensitivity": 0.9333333333333333,
+        "specificity": 0.8380952380952381,
+        "precision": 0.6222222222222222,
+        "f1": 0.7466666666666667,
+        "sensitivity_ci_low": 0.7867654163738308,
+        "sensitivity_ci_high": 0.9815229762087295,
+        "specificity_ci_low": 0.7559378330310743,
+        "specificity_ci_high": 0.8963871244740037,
+        "median_confirmation_delay_ms": 2335.0
       },
       "CrashGuard": {
         "tp": 24,
@@ -239,7 +334,7 @@
     }
   ],
   "tests_passed": 14,
-  "python": "3.14.6",
-  "numpy": "2.5.1",
-  "source_sha256": "818e97aea3bbb4cbfbfe5e925e1ebeb38c06b31c0c929725031032419cb53639"
+  "python": "3.13.14",
+  "numpy": "2.2.6",
+  "source_sha256": "6302d6274cdb39c459744303e3f8a24552f4d532afbebf12398ccb7a501c2364"
 }

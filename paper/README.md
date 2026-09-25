@@ -2,8 +2,8 @@
 
 Repository: https://github.com/qwerty-dvorak/crashguard-iot/tree/main/paper
 
-- [Research paper (PDF)](report.pdf)
-- [LaTeX manuscript](report.tex) and [bibliography](references.bib)
+- [Research paper (PDF)](main_manuscript.pdf)
+- [LaTeX manuscript](main_manuscript.tex) and [bibliography](references.bib)
 - [Firmware and circuit](wokwi/)
 - [Analysis and simulation scripts](analysis/)
 - [Results, logs, and data partitions](results/)
@@ -13,7 +13,7 @@ This directory includes every project source, figure, and data input needed to r
 
 ## Reproduce
 
-Install a C++17 compiler, Python 3 with the dependencies below, and TeX Live with latexmk, IEEEtran bibliography style, circuitikz, and the packages in `report.tex`.
+Install a C++17 compiler, Python 3 with the dependencies below, and TeX Live with latexmk, IEEEtran bibliography style, circuitikz, and the packages in `main_manuscript.tex`.
 
 ```sh
 git clone https://github.com/qwerty-dvorak/crashguard-iot.git
@@ -25,7 +25,7 @@ sh reproduce.sh
 To rebuild only the manuscript:
 
 ```sh
-latexmk -pdf -interaction=nonstopmode -halt-on-error report.tex
+latexmk -pdf -interaction=nonstopmode -halt-on-error main_manuscript.tex
 ```
 
 ## Experiments

@@ -59,17 +59,74 @@ struct OrderedRuleDetector {
   }
 };
 
+struct Boubezoul2013Detector {
+  enum class State { Idle, FallInProgress, RestVerification };
+  State state = State::Idle;
+  uint32_t triggerMs = 0;
+  uint32_t restStartMs = 0;
+  bool detected = false;
+  uint32_t detectionMs = 0;
+
+  void update(const crashguard::Sample &sample,
+              const crashguard::Features &features) {
+    if (detected) return;
+    const float rollRate = std::abs(sample.gxDps);
+    const bool isFallInception = (rollRate >= 60.0f) ||
+                                 (features.accelerationG >= 2.5f) ||
+                                 (features.accelerationG <= 0.40f);
+
+    switch (state) {
+      case State::Idle:
+        if (isFallInception) {
+          state = State::FallInProgress;
+          triggerMs = sample.timeMs;
+        }
+        break;
+      case State::FallInProgress:
+        if (features.tiltDeg >= 55.0f) {
+          state = State::RestVerification;
+          restStartMs = sample.timeMs;
+        } else if (sample.timeMs - triggerMs > 2000) {
+          state = State::Idle;
+        }
+        break;
+      case State::RestVerification: {
+        const bool atRest = (features.tiltDeg >= 55.0f) &&
+                            (features.accelerationG >= 0.70f) &&
+                            (features.accelerationG <= 1.30f) &&
+                            (features.angularRateDps <= 30.0f);
+        if (atRest) {
+          if (sample.timeMs - restStartMs >= 1500) {
+            detected = true;
+            detectionMs = sample.timeMs;
+          }
+        } else {
+          restStartMs = sample.timeMs;
+        }
+        if (!detected && sample.timeMs - triggerMs > 6000) {
+          state = State::Idle;
+        }
+        break;
+      }
+    }
+  }
+};
+
 struct EventResult {
   std::string id;
   int label = 0;
   std::string scenario;
   bool baseline = false;
   bool ordered = false;
+  bool boubezoul = false;
   bool crashguard = false;
   int64_t baselineMs = -1;
   int64_t orderedMs = -1;
+  int64_t boubezoulMs = -1;
   int64_t crashguardMs = -1;
+  int64_t baselineConfirmationDelayMs = -1;
   int64_t orderedConfirmationDelayMs = -1;
+  int64_t boubezoulConfirmationDelayMs = -1;
   int64_t crashguardCandidateMs = -1;
   int64_t crashguardConfirmationDelayMs = -1;
 };
@@ -79,11 +136,13 @@ void writeResult(const EventResult &result) {
   std::cout << result.id << ',' << result.label << ',' << result.scenario << ','
             << static_cast<int>(result.baseline) << ','
             << static_cast<int>(result.ordered) << ','
+            << static_cast<int>(result.boubezoul) << ','
             << static_cast<int>(result.crashguard) << ','
             << result.baselineMs << ',' << result.orderedMs << ','
-            << result.crashguardMs << ','
+            << result.boubezoulMs << ',' << result.crashguardMs << ','
             << (result.baseline ? 0 : -1) << ','
             << result.orderedConfirmationDelayMs << ','
+            << result.boubezoulConfirmationDelayMs << ','
             << result.crashguardConfirmationDelayMs << '\n';
 }
 
@@ -116,16 +175,17 @@ bool parseLine(const std::string &line, std::string &eventId, int &label,
 int main() {
   std::ios::sync_with_stdio(false);
   std::cout << "event_id,label,scenario,baseline_prediction,ordered_prediction,"
-               "crashguard_prediction,baseline_detection_ms,ordered_detection_ms,"
-               "crashguard_detection_ms,baseline_confirmation_delay_ms,"
-               "ordered_confirmation_delay_ms,"
-               "crashguard_confirmation_delay_ms\n";
+               "boubezoul_prediction,crashguard_prediction,baseline_detection_ms,"
+               "ordered_detection_ms,boubezoul_detection_ms,crashguard_detection_ms,"
+               "baseline_confirmation_delay_ms,ordered_confirmation_delay_ms,"
+               "boubezoul_confirmation_delay_ms,crashguard_confirmation_delay_ms\n";
 
   std::string line;
   std::getline(std::cin, line);  // CSV header.
   std::string activeId;
   EventResult result;
   crashguard::Detector detector;
+  Boubezoul2013Detector boubezoul;
   OrderedRuleDetector ordered;
 
   while (std::getline(std::cin, line)) {
@@ -148,6 +208,7 @@ int main() {
       result.scenario = scenario;
       detector.reset();
       detector.setReferenceGravity(0.0f, 0.0f, 1.0f);
+      boubezoul = Boubezoul2013Detector{};
       ordered = OrderedRuleDetector{};
     }
 
@@ -171,7 +232,17 @@ int main() {
           result.crashguardMs - result.crashguardCandidateMs;
     }
 
-    ordered.update(sample, detector.features());
+    const crashguard::Features f = detector.features();
+
+    boubezoul.update(sample, f);
+    if (!result.boubezoul && boubezoul.detected) {
+      result.boubezoul = true;
+      result.boubezoulMs = boubezoul.detectionMs;
+      result.boubezoulConfirmationDelayMs =
+          result.boubezoulMs - boubezoul.triggerMs;
+    }
+
+    ordered.update(sample, f);
     if (!result.ordered && ordered.detected) {
       result.ordered = true;
       result.orderedMs = ordered.detectionMs;

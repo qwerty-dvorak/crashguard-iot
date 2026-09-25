@@ -162,14 +162,18 @@ def simulate_event(
     )
     acceleration = gravity_body + linear
 
-    gyro = np.column_stack(
-        (
-            np.gradient(roll, time),
-            np.gradient(pitch, time),
-            np.gradient(yaw, time),
-        )
-    )
-    gyro = np.rad2deg(gyro)
+    droll = np.gradient(roll, time)
+    dpitch = np.gradient(pitch, time)
+    dyaw = np.gradient(yaw, time)
+
+    # Standard aerospace / vehicle Tait-Bryan Z-Y-X rotation kinematics:
+    # Transform Euler angle rates (droll, dpitch, dyaw) to true rigid-body
+    # angular velocity components in the sensor body frame (wx, wy, wz).
+    wx = droll - dyaw * sin_pitch
+    wy = dpitch * cos_roll + dyaw * sin_roll * cos_pitch
+    wz = -dpitch * sin_roll + dyaw * cos_roll * cos_pitch
+
+    gyro = np.rad2deg(np.column_stack((wx, wy, wz)))
 
     accel_bias = rng.normal(0.0, 0.018, size=3)
     gyro_bias = rng.normal(0.0, 0.8, size=3)

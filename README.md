@@ -2,12 +2,17 @@
 
 The complete, self-contained research artifact is in [paper/](paper/).
 
-- [Read the research paper](paper/report.pdf)
-- [LaTeX manuscript](paper/report.tex) and [references](paper/references.bib)
+- [**Read the research paper (PDF)**](paper/main_manuscript.pdf)
+- [**LaTeX manuscript**](paper/main_manuscript.tex) and [references](paper/references.bib)
 - [ESP32 firmware and circuit](paper/wokwi/)
 - [Simulation and evaluation scripts](paper/analysis/)
 - [Experimental results and logs](paper/results/)
 - [Dataset provenance and source attribution](paper/data/README.md)
+
+### Repository Manuscripts
+- **`paper/main_manuscript.tex` (and `.pdf`)**: The **primary, complete research paper** containing the full rigid-body kinematic simulation, Boubezoul et al. (2013) baseline comparison, paired McNemar statistical hypothesis tests, parametric sensitivity analysis, and virtual firmware defect discovery.
+- **`review3/review3_report.tex` (and `.pdf`)**: Milestone report submitted for Review 3 (archived).
+- **`legacy_v1_report.tex` (and `.pdf`)**: Original project report draft (archived).
 
 ## Reproduce the paper
 

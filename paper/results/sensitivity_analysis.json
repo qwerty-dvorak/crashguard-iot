@@ -1,0 +1,250 @@
+{
+  "tilt_sweep": [
+    {
+      "tilt_deg": 40.0,
+      "sensitivity": 0.7866666666666666,
+      "specificity": 0.9961904761904762,
+      "f1": 0.8740740740740741,
+      "lowside_recall": 0.5733333333333334,
+      "highside_recall": 1.0,
+      "fp": 2,
+      "fn": 32
+    },
+    {
+      "tilt_deg": 42.5,
+      "sensitivity": 0.7866666666666666,
+      "specificity": 0.9961904761904762,
+      "f1": 0.8740740740740741,
+      "lowside_recall": 0.5733333333333334,
+      "highside_recall": 1.0,
+      "fp": 2,
+      "fn": 32
+    },
+    {
+      "tilt_deg": 45.0,
+      "sensitivity": 0.7866666666666666,
+      "specificity": 0.9961904761904762,
+      "f1": 0.8740740740740741,
+      "lowside_recall": 0.5733333333333334,
+      "highside_recall": 1.0,
+      "fp": 2,
+      "fn": 32
+    },
+    {
+      "tilt_deg": 47.5,
+      "sensitivity": 0.78,
+      "specificity": 0.9961904761904762,
+      "f1": 0.8698884758364313,
+      "lowside_recall": 0.56,
+      "highside_recall": 1.0,
+      "fp": 2,
+      "fn": 33
+    },
+    {
+      "tilt_deg": 50.0,
+      "sensitivity": 0.7666666666666667,
+      "specificity": 1.0,
+      "f1": 0.8679245283018868,
+      "lowside_recall": 0.5333333333333333,
+      "highside_recall": 1.0,
+      "fp": 0,
+      "fn": 35
+    },
+    {
+      "tilt_deg": 52.5,
+      "sensitivity": 0.7666666666666667,
+      "specificity": 1.0,
+      "f1": 0.8679245283018868,
+      "lowside_recall": 0.5333333333333333,
+      "highside_recall": 1.0,
+      "fp": 0,
+      "fn": 35
+    },
+    {
+      "tilt_deg": 55.0,
+      "sensitivity": 0.76,
+      "specificity": 1.0,
+      "f1": 0.8636363636363636,
+      "lowside_recall": 0.52,
+      "highside_recall": 1.0,
+      "fp": 0,
+      "fn": 36
+    },
+    {
+      "tilt_deg": 57.5,
+      "sensitivity": 0.76,
+      "specificity": 1.0,
+      "f1": 0.8636363636363636,
+      "lowside_recall": 0.52,
+      "highside_recall": 1.0,
+      "fp": 0,
+      "fn": 36
+    },
+    {
+      "tilt_deg": 60.0,
+      "sensitivity": 0.76,
+      "specificity": 1.0,
+      "f1": 0.8636363636363636,
+      "lowside_recall": 0.52,
+      "highside_recall": 1.0,
+      "fp": 0,
+      "fn": 36
+    },
+    {
+      "tilt_deg": 62.5,
+      "sensitivity": 0.76,
+      "specificity": 1.0,
+      "f1": 0.8636363636363636,
+      "lowside_recall": 0.52,
+      "highside_recall": 1.0,
+      "fp": 0,
+      "fn": 36
+    },
+    {
+      "tilt_deg": 65.0,
+      "sensitivity": 0.7466666666666667,
+      "specificity": 1.0,
+      "f1": 0.8549618320610687,
+      "lowside_recall": 0.49333333333333335,
+      "highside_recall": 1.0,
+      "fp": 0,
+      "fn": 38
+    },
+    {
+      "tilt_deg": 67.5,
+      "sensitivity": 0.7333333333333333,
+      "specificity": 1.0,
+      "f1": 0.8461538461538461,
+      "lowside_recall": 0.48,
+      "highside_recall": 0.9866666666666667,
+      "fp": 0,
+      "fn": 40
+    },
+    {
+      "tilt_deg": 70.0,
+      "sensitivity": 0.7066666666666667,
+      "specificity": 1.0,
+      "f1": 0.828125,
+      "lowside_recall": 0.4533333333333333,
+      "highside_recall": 0.96,
+      "fp": 0,
+      "fn": 44
+    }
+  ],
+  "rotation_sweep": [
+    {
+      "rotation_dps": 60.0,
+      "sensitivity": 0.8133333333333334,
+      "specificity": 1.0,
+      "lowside_recall": 0.6266666666666667,
+      "fp": 0
+    },
+    {
+      "rotation_dps": 70.0,
+      "sensitivity": 0.8133333333333334,
+      "specificity": 1.0,
+      "lowside_recall": 0.6266666666666667,
+      "fp": 0
+    },
+    {
+      "rotation_dps": 80.0,
+      "sensitivity": 0.8066666666666666,
+      "specificity": 1.0,
+      "lowside_recall": 0.6133333333333333,
+      "fp": 0
+    },
+    {
+      "rotation_dps": 90.0,
+      "sensitivity": 0.76,
+      "specificity": 1.0,
+      "lowside_recall": 0.52,
+      "fp": 0
+    },
+    {
+      "rotation_dps": 100.0,
+      "sensitivity": 0.7333333333333333,
+      "specificity": 1.0,
+      "lowside_recall": 0.4666666666666667,
+      "fp": 0
+    },
+    {
+      "rotation_dps": 110.0,
+      "sensitivity": 0.6733333333333333,
+      "specificity": 1.0,
+      "lowside_recall": 0.3466666666666667,
+      "fp": 0
+    },
+    {
+      "rotation_dps": 120.0,
+      "sensitivity": 0.64,
+      "specificity": 1.0,
+      "lowside_recall": 0.28,
+      "fp": 0
+    },
+    {
+      "rotation_dps": 130.0,
+      "sensitivity": 0.6,
+      "specificity": 1.0,
+      "lowside_recall": 0.2,
+      "fp": 0
+    },
+    {
+      "rotation_dps": 140.0,
+      "sensitivity": 0.56,
+      "specificity": 1.0,
+      "lowside_recall": 0.13333333333333333,
+      "fp": 0
+    },
+    {
+      "rotation_dps": 150.0,
+      "sensitivity": 0.5333333333333333,
+      "specificity": 1.0,
+      "lowside_recall": 0.10666666666666667,
+      "fp": 0
+    }
+  ],
+  "hold_sweep": [
+    {
+      "rest_hold_ms": 1000,
+      "sensitivity": 0.7666666666666667,
+      "specificity": 0.96,
+      "lowside_recall": 0.5333333333333333,
+      "fp": 21
+    },
+    {
+      "rest_hold_ms": 1500,
+      "sensitivity": 0.7666666666666667,
+      "specificity": 0.9771428571428571,
+      "lowside_recall": 0.5333333333333333,
+      "fp": 12
+    },
+    {
+      "rest_hold_ms": 2000,
+      "sensitivity": 0.76,
+      "specificity": 1.0,
+      "lowside_recall": 0.52,
+      "fp": 0
+    },
+    {
+      "rest_hold_ms": 2500,
+      "sensitivity": 0.76,
+      "specificity": 1.0,
+      "lowside_recall": 0.52,
+      "fp": 0
+    },
+    {
+      "rest_hold_ms": 3000,
+      "sensitivity": 0.76,
+      "specificity": 1.0,
+      "lowside_recall": 0.52,
+      "fp": 0
+    },
+    {
+      "rest_hold_ms": 3500,
+      "sensitivity": 0.76,
+      "specificity": 1.0,
+      "lowside_recall": 0.52,
+      "fp": 0
+    }
+  ]
+}

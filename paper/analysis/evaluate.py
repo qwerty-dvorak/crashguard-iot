@@ -69,24 +69,39 @@ def detector_config(review_dir: Path) -> dict[str, float]:
     return output
 
 
+from detector_engine import replay_events, mcnemar_test
+
+
 def replay_detector(review_dir: Path) -> list[dict[str, str]]:
     executable = review_dir / "analysis" / "build" / "detector_replay"
     dataset = review_dir / "data" / "generated" / "simulated_imu.csv.gz"
     output = review_dir / "results" / "event_results.csv"
-    with output.open("wb") as destination:
-        replay = subprocess.Popen(
-            [str(executable)], stdin=subprocess.PIPE, stdout=destination
-        )
-        assert replay.stdin is not None
-        with gzip.open(dataset, "rb") as source:
-            for block in iter(lambda: source.read(1024 * 1024), b""):
-                replay.stdin.write(block)
-        replay.stdin.close()
-        return_code = replay.wait()
-    if return_code != 0:
-        raise RuntimeError(f"detector replay failed with {return_code}")
-    with output.open(newline="", encoding="utf-8") as handle:
-        return list(csv.DictReader(handle))
+
+    # If C++ binary exists, use it; otherwise use exact Python engine
+    if executable.exists():
+        with output.open("wb") as destination:
+            replay = subprocess.Popen(
+                [str(executable)], stdin=subprocess.PIPE, stdout=destination
+            )
+            assert replay.stdin is not None
+            with gzip.open(dataset, "rb") as source:
+                for block in iter(lambda: source.read(1024 * 1024), b""):
+                    replay.stdin.write(block)
+            replay.stdin.close()
+            return_code = replay.wait()
+        if return_code != 0:
+            raise RuntimeError(f"detector replay failed with {return_code}")
+        with output.open(newline="", encoding="utf-8") as handle:
+            return list(csv.DictReader(handle))
+    else:
+        results = replay_events(dataset)
+        fieldnames = list(results[0].keys())
+        with output.open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=fieldnames, lineterminator="\n")
+            writer.writeheader()
+            writer.writerows(results)
+        with output.open(newline="", encoding="utf-8") as handle:
+            return list(csv.DictReader(handle))
 
 
 def metric_summary(rows: list[dict[str, str]]) -> dict[str, dict[str, float | int]]:
@@ -94,18 +109,21 @@ def metric_summary(rows: list[dict[str, str]]) -> dict[str, dict[str, float | in
     for model, column in (
         ("Acceleration-only comparison", "baseline_prediction"),
         ("Strict ordered-threshold comparison", "ordered_prediction"),
+        ("Boubezoul et al. (2013)", "boubezoul_prediction"),
         ("CrashGuard", "crashguard_prediction"),
     ):
+        if column not in rows[0]:
+            continue
         labels = np.array([int(row["label"]) for row in rows], dtype=int)
         predictions = np.array([int(row[column]) for row in rows], dtype=int)
         tp = int(np.sum((labels == 1) & (predictions == 1)))
         tn = int(np.sum((labels == 0) & (predictions == 0)))
         fp = int(np.sum((labels == 0) & (predictions == 1)))
         fn = int(np.sum((labels == 1) & (predictions == 0)))
-        sensitivity = tp / (tp + fn)
-        specificity = tn / (tn + fp)
+        sensitivity = tp / (tp + fn) if (tp + fn) else 0.0
+        specificity = tn / (tn + fp) if (tn + fp) else 0.0
         precision = tp / (tp + fp) if tp + fp else 0.0
-        f1 = 2 * precision * sensitivity / (precision + sensitivity)
+        f1 = 2 * precision * sensitivity / (precision + sensitivity) if (precision + sensitivity) else 0.0
         sens_low, sens_high = wilson(tp, tp + fn)
         spec_low, spec_high = wilson(tn, tn + fp)
         delay_column = column.replace("prediction", "confirmation_delay_ms")
@@ -359,10 +377,12 @@ def write_macros(
     metrics: dict[str, dict[str, float | int]],
     external: list[dict[str, object]],
     config: dict[str, float],
+    mcnemar: dict[str, dict[str, float]],
 ) -> None:
     crashguard = metrics["CrashGuard"]
     baseline = metrics["Acceleration-only comparison"]
     ordered = metrics["Strict ordered-threshold comparison"]
+    boubezoul = metrics.get("Boubezoul et al. (2013)", {})
     positive_external = [record for record in external if int(record["label"]) == 1]
     generated = review_dir / "results" / "generated_macros.tex"
     lines = [
@@ -398,13 +418,44 @@ def write_macros(
         rf"\newcommand{{\OrderedSpecificity}}{{{100 * float(ordered['specificity']):.1f}\%}}",
         rf"\newcommand{{\OrderedFOne}}{{{float(ordered['f1']):.3f}}}",
         rf"\newcommand{{\OrderedConfirmationDelayMs}}{{{float(ordered['median_confirmation_delay_ms']):.0f}}}",
+    ]
+
+    if boubezoul:
+        lines.extend([
+            rf"\newcommand{{\BoubezoulSensitivity}}{{{100 * float(boubezoul['sensitivity']):.1f}\%}}",
+            rf"\newcommand{{\BoubezoulSpecificity}}{{{100 * float(boubezoul['specificity']):.1f}\%}}",
+            rf"\newcommand{{\BoubezoulFOne}}{{{float(boubezoul['f1']):.3f}}}",
+            rf"\newcommand{{\BoubezoulTP}}{{{int(boubezoul['tp'])}}}",
+            rf"\newcommand{{\BoubezoulTN}}{{{int(boubezoul['tn'])}}}",
+            rf"\newcommand{{\BoubezoulFP}}{{{int(boubezoul['fp'])}}}",
+            rf"\newcommand{{\BoubezoulFN}}{{{int(boubezoul['fn'])}}}",
+            rf"\newcommand{{\BoubezoulConfirmationDelayMs}}{{{float(boubezoul['median_confirmation_delay_ms']):.0f}}}",
+        ])
+
+    if "crashguard_vs_boubezoul" in mcnemar:
+        lines.extend([
+            rf"\newcommand{{\McNemarBoubezoulStat}}{{{mcnemar['crashguard_vs_boubezoul']['statistic']:.2f}}}",
+            rf"\newcommand{{\McNemarBoubezoulPValue}}{{{mcnemar['crashguard_vs_boubezoul']['p_value']:.4e}}}",
+        ])
+    if "crashguard_vs_ordered" in mcnemar:
+        lines.extend([
+            rf"\newcommand{{\McNemarOrderedStat}}{{{mcnemar['crashguard_vs_ordered']['statistic']:.2f}}}",
+            rf"\newcommand{{\McNemarOrderedPValue}}{{{mcnemar['crashguard_vs_ordered']['p_value']:.4e}}}",
+        ])
+    if "crashguard_vs_baseline" in mcnemar:
+        lines.extend([
+            rf"\newcommand{{\McNemarBaselineStat}}{{{mcnemar['crashguard_vs_baseline']['statistic']:.2f}}}",
+            rf"\newcommand{{\McNemarBaselinePValue}}{{{mcnemar['crashguard_vs_baseline']['p_value']:.4e}}}",
+        ])
+
+    lines.extend([
         rf"\newcommand{{\ExternalFallCount}}{{{len(positive_external)}}}",
         rf"\newcommand{{\ExternalManoeuvreCount}}{{{len(external) - len(positive_external)}}}",
         rf"\newcommand{{\ExternalFourGPass}}{{{sum(int(record['passes_strict_acceleration_4g']) for record in positive_external)}}}",
         rf"\newcommand{{\ExternalTwoHundredPass}}{{{sum(int(record['passes_strict_rotation_200dps']) for record in positive_external)}}}",
         rf"\newcommand{{\ExternalCrashGuardImpactPass}}{{{sum(int(record['passes_crashguard_acceleration']) for record in positive_external)}}}",
         rf"\newcommand{{\ExternalCrashGuardRotationPass}}{{{sum(int(record['passes_crashguard_rotation']) for record in positive_external)}}}",
-    ]
+    ])
     generated.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -418,10 +469,24 @@ def main() -> None:
     rows = replay_detector(review_dir)
     metrics = metric_summary(rows)
     external = external_ptw_features(review_dir, config)
+
+    labels = np.array([int(r["label"]) for r in rows], dtype=int)
+    cg_preds = np.array([int(r["crashguard_prediction"]) for r in rows], dtype=int)
+    base_preds = np.array([int(r["baseline_prediction"]) for r in rows], dtype=int)
+    ord_preds = np.array([int(r["ordered_prediction"]) for r in rows], dtype=int)
+
+    mcnemar_results = {
+        "crashguard_vs_baseline": mcnemar_test(cg_preds, base_preds, labels),
+        "crashguard_vs_ordered": mcnemar_test(cg_preds, ord_preds, labels),
+    }
+    if "boubezoul_prediction" in rows[0]:
+        boub_preds = np.array([int(r["boubezoul_prediction"]) for r in rows], dtype=int)
+        mcnemar_results["crashguard_vs_boubezoul"] = mcnemar_test(cg_preds, boub_preds, labels)
+
     plot_performance(metrics, figures)
     plot_exemplars(review_dir, figures, config)
     plot_external(external, figures, config)
-    write_macros(review_dir, metrics, external, config)
+    write_macros(review_dir, metrics, external, config, mcnemar_results)
 
     dataset = review_dir / "data" / "generated" / "simulated_imu.csv.gz"
     summary = {
@@ -435,12 +500,15 @@ def main() -> None:
         },
         "detector_config": config,
         "metrics": metrics,
+        "mcnemar_tests": mcnemar_results,
         "external_ptw_recordings": external,
     }
     with (review_dir / "results" / "summary.json").open("w", encoding="utf-8") as handle:
         json.dump(summary, handle, indent=2)
         handle.write("\n")
     print(json.dumps(metrics, indent=2))
+    print("\nMcNemar tests:")
+    print(json.dumps(mcnemar_results, indent=2))
 
 
 if __name__ == "__main__":
