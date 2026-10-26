@@ -21,3 +21,6 @@ wokwi/secrets.h
 .venv/
 wokwi/build/
 wokwi/arduino/
+
+# Reference papers used for style study (not redistributable)
+rp*.pdf
