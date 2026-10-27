@@ -4,6 +4,7 @@ Repository: https://github.com/qwerty-dvorak/crashguard-iot/tree/main/paper
 
 - [Research paper (PDF)](main_manuscript.pdf)
 - [LaTeX manuscript](main_manuscript.tex) and [bibliography](references.bib)
+- [Updated Word source](final_update_23BCT0122_crashguard.docx), used for the manuscript wording
 - [Firmware and circuit](wokwi/)
 - [Analysis and simulation scripts](analysis/)
 - [Results, logs, and data partitions](results/)
@@ -26,6 +27,15 @@ To rebuild only the manuscript:
 
 ```sh
 latexmk -pdf -interaction=nonstopmode -halt-on-error main_manuscript.tex
+```
+
+The IEEE bibliography style is bundled as `IEEEtran.bst`. If latexmk is unavailable, build with:
+
+```sh
+pdflatex -interaction=nonstopmode -halt-on-error main_manuscript.tex
+bibtex main_manuscript
+pdflatex -interaction=nonstopmode -halt-on-error main_manuscript.tex
+pdflatex -interaction=nonstopmode -halt-on-error main_manuscript.tex
 ```
 
 ## Experiments
